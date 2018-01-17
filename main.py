@@ -23,6 +23,7 @@ itemEvaluation.add_ignore("Yriel's Fostering")
 itemEvaluation.add_ignore("The Signal Fire")
 itemEvaluation.add_ignore("Ventor's Gamble")
 itemEvaluation.add_ignore("Watcher's Eye")
+itemEvaluation.add_ignore("The Pariah")
 
 def notify_important():
     ctypes.windll.user32.FlashWindow(ctypes.windll.kernel32.GetConsoleWindow(), True)
