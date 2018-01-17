@@ -20,11 +20,12 @@ data_key_unique_maps = "UniqueMaps"
 data_key_maps = "Maps"
 data_key_currency = "Currency"
 
+
 class IndexerData:
     _ninja_cdn = "http://cdn.poe.ninja/api/Data/"
     _ninja_api = "http://api.poe.ninja/api/Data/"
     league = "Standard"
-    cache_directory = "cache"
+    cache_directory = "cache_data"
     index = {}
 
     def __init__(self):
@@ -151,7 +152,7 @@ class IndexerData:
         item_class = item.get('frameType', None)
         item_links = self.get_link_count(item)
         corrupted = item.get('corrupted')
-        if corrupted == "True":
+        if corrupted is not None:
             # For now we will ignore corrupted weapons and armor, too much variation in price
             return
 
