@@ -2,13 +2,12 @@
 
 import time
 import requests
-import re
 import data
 import evaluate
 import ctypes
 
 from colorama import init
-from colorama import Fore, Back, Style
+from colorama import Fore
 init()
 
 league = "Abyss"

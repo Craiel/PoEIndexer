@@ -1,6 +1,10 @@
 import os
 import re
 import hashlib
+import json
+import time
+
+from pathlib import Path
 
 class ItemEvaluation:
     league = "Standard"
@@ -14,8 +18,12 @@ class ItemEvaluation:
     min_gain = 2
     min_percent_decrease = 30
     optimistic_multiplier = 0.9
+    enable_cache = False
 
     def __init__(self, indexer_data):
+
+        print("Initializing Item Evaluation")
+        print(" -> Cache: " + str(self.enable_cache))
 
         if indexer_data is None:
             raise ValueError('Indexer Data is None!')
@@ -28,7 +36,7 @@ class ItemEvaluation:
         pass
 
     def set_league(self, league_value):
-        print("Setting League to " + league_value)
+        print(" -> Setting League to " + league_value)
         self.league = league_value
 
     def process(self, stashes):
@@ -109,6 +117,16 @@ class ItemEvaluation:
         self.md5.update(hash_data)
         context['hash'] = self.md5.hexdigest()
 
+        cached_result = self._load_result_from_cache(context['hash'])
+        if cached_result is not None:
+            age = time.time() - cached_result['time']
+            print('Cache_Age: ' + str(age))
+
+            return cached_result
+
+        context['time'] = time.time()
+
+        self._update_item_currency(context)
         self._update_item_price(context)
 
         if 'price' not in context or context['price'] is None or context['price'] < self.min_value:
@@ -124,9 +142,32 @@ class ItemEvaluation:
         if context['percent_decrease'] < self.min_percent_decrease:
             return None
 
+        self._save_result_to_cache(context)
+
         return context
 
-    def _update_item_price(self, context):
+    def _load_result_from_cache(self, hash):
+        if not self.enable_cache:
+            return None
+
+        cache_file = self.cache_directory + "/" + hash
+        my_file = Path(cache_file)
+        if my_file.is_file():
+            with open(cache_file) as json_data:
+                return json.load(json_data)
+
+        return None
+
+    def _save_result_to_cache(self, result):
+        if not self.enable_cache:
+            return
+
+        cache_file = self.cache_directory + "/" + result['hash']
+        with open(cache_file, 'w') as outfile:
+            json.dump(result, outfile)
+
+    @staticmethod
+    def _update_item_currency(context):
         price_raw = context['note']
         if 'chaos' in price_raw or 'Chaos' in price_raw or 'caos' in price_raw:
             currency = None
@@ -190,20 +231,23 @@ class ItemEvaluation:
             print("Unsupported Currency: " + price_raw)
             return False
 
+        context['price_raw'] = price_raw
         context['currency'] = currency
         context['currency_title'] = currency_title
 
+    def _update_item_price(self, context):
+
         try:
-            if not re.findall(r'\d+', price_raw)[0]:
+            if not re.findall(r'\d+', context['price_raw'])[0]:
                 return
 
-            context['price_raw'] = float(re.findall(r'\d+', price_raw)[0])
+            context['price_raw'] = float(re.findall(r'\d+', context['price_raw'])[0])
 
         except:
             return False
 
-        if currency is not None:
-            conversion_rate = self.data.get_currency_conversion(currency)
+        if context['currency'] is not None:
+            conversion_rate = self.data.get_currency_conversion(context['currency'])
             if conversion_rate is None:
                 return False
 
