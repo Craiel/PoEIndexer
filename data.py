@@ -150,6 +150,10 @@ class IndexerData:
     def _frame_and_link_match_and_get_price(self, item, data_entry):
         item_class = item.get('frameType', None)
         item_links = self.get_link_count(item)
+        corrupted = item.get('corrupted')
+        if corrupted == "True":
+            # For now we will ignore corrupted weapons and armor, too much variation in price
+            return
 
         results = 0
         result = 0

@@ -58,7 +58,7 @@ def process_item(stash, item):
     elif 'fuse' in price_raw or 'Verbindung' in price_raw or 'fus' in price_raw or 'fusión' in price_raw:
         currency = "Orb of Fusing"
         currency_title = "fusing"
-    elif 'chance' in price_raw:
+    elif 'chance' in price_raw or 'Möglichkeiten' in price_raw:
         currency = "Orb of Chance"
         currency_title = "chance"
     elif 'alt' in price_raw or 'Veränderung' in price_raw:
@@ -153,7 +153,7 @@ def process_item(stash, item):
     header = "[{}] [{} - {}c/{}c/{}c - {}%] ".format(
         time.strftime("%H:%M:%S"),
         rating,
-        price,
+        round(price, 0),
         round(item_value, 0),
         round(optimistic_value, 0),
         round(perc_decrease)
