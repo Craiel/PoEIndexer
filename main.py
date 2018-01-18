@@ -40,26 +40,23 @@ def print_result(result):
     rating = 0
 
     # set the main rating based on the percentage gain
-    if result['percent_decrease'] >= 85:
+    if result['percent_decrease'] >= 90:
         rating += 8
-    elif result['percent_decrease'] >= 70:
+    elif result['percent_decrease'] >= 60:
         rating += 6
-    elif result['percent_decrease'] >= 50:
+    elif result['percent_decrease'] >= 40:
         rating += 4
-    elif result['percent_decrease'] >= 30:
+    elif result['percent_decrease'] >= 20:
         rating += 2
     else:
         return
 
-    # bump up the rating by one since the profit margin is great
-    if result['gain'] > 25:
-        rating += 2
-
     if rating >= 8:
+        color = Fore.MAGENTA
+        # won't notify on these, they are almost always mis-pricing
+    elif rating >= 6:
         color = Fore.RED
         notify_important()
-    elif rating >= 6:
-        color = Fore.MAGENTA
     elif rating >= 4:
         color = Fore.YELLOW
     elif rating >= 2:

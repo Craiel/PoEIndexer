@@ -19,6 +19,7 @@ class ItemEvaluation:
     min_percent_decrease = 30
     optimistic_multiplier = 0.9
     enable_cache = False
+    enable_debug = False
     number_regex = r"[-+]?\d*\.\d+|\d+"
 
     def __init__(self, indexer_data):
@@ -85,7 +86,10 @@ class ItemEvaluation:
         self.stat_items_processed += 1
 
         context = {
+            'raw_data': item,
             'id': item.get('id', None),
+            'type': item.get('frameType', None),
+            'category': item.get('category', None),
             'character': stash.get('lastCharacterName'),
             'note': item.get('note', None),
             'name_raw': item.get('name', None),
@@ -94,7 +98,9 @@ class ItemEvaluation:
             'corrupted': item.get('corrupted') is not None,
         }
 
-        if context['note'] is None or context['note'] == '' or not context['note'].startswith('~'):
+        if context['note'] is None \
+                or context['note'] == '' \
+                or not context['note'].startswith('~'):
             # Ignore this item, won't find any valid price info anyway
             return None
 
@@ -143,6 +149,7 @@ class ItemEvaluation:
         if context['percent_decrease'] < self.min_percent_decrease:
             return None
 
+        self._save_debug(context)
         self._save_result_to_cache(context)
 
         return context
@@ -158,6 +165,14 @@ class ItemEvaluation:
                 return json.load(json_data)
 
         return None
+
+    def _save_debug(self, result):
+        if not self.enable_debug:
+            return
+
+        debug_file = self.cache_directory + "/" + str(result['time']) + "_" + str(result['id']) + "_" + result['name']
+        with open(debug_file, 'w') as outfile:
+            json.dump(result, outfile)
 
     def _save_result_to_cache(self, result):
         if not self.enable_cache:
@@ -186,7 +201,7 @@ class ItemEvaluation:
         elif 'chisel' in price_raw or 'Meißel' in price_raw:
             currency = "Cartographer's Chisel"
             currency_title = "chisel"
-        elif 'chrom' in price_raw or 'crom' in price_raw:
+        elif 'chrom' in price_raw or 'crom' in price_raw or 'Färbung' in price_raw:
             currency = "Chromatic Orb"
             currency_title = "chromatic"
         elif 'fuse' in price_raw or 'Verbindung' in price_raw or 'fus' in price_raw or 'fusión' in price_raw:

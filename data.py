@@ -97,7 +97,7 @@ class IndexerData:
         elif 'accessories' in category:
             for accessory in self.index[data_key_accessory]:
                 if accessory == item_name:
-                    value = self._generic_get_price(self.index[data_key_accessory][accessory])
+                    value = self._generic_get_price_non_corrupt(item, self.index[data_key_accessory][accessory])
                     return value
 
         elif 'maps' in category:
@@ -177,14 +177,34 @@ class IndexerData:
 
         return result
 
+    def _generic_get_price_non_corrupt(self, item, data_entry):
+        corrupted = item.get('corrupted')
+        if corrupted is not None:
+            # For now we will ignore corrupted weapons and armor, too much variation in price
+            return
+
+        results = 0
+        result = 0
+        for candidate in data_entry:
+            value = candidate.get('chaosValue')
+            if value is None:
+                continue
+
+            results += 1
+            result = value
+
+        if results > 1:
+            # Inconclusive, wont take the risk
+            return 0
+
+        return result
+
     def _generic_get_price(self, data_entry):
         results = 0
         result = 0
         for candidate in data_entry:
             value = candidate.get('chaosValue')
             if value is None:
-                print('No C Value')
-                print(candidate)
                 continue
 
             results += 1
