@@ -19,6 +19,7 @@ class ItemEvaluation:
     min_percent_decrease = 30
     optimistic_multiplier = 0.9
     enable_cache = False
+    number_regex = r"[-+]?\d*\.\d+|\d+"
 
     def __init__(self, indexer_data):
 
@@ -238,10 +239,10 @@ class ItemEvaluation:
     def _update_item_price(self, context):
 
         try:
-            if not re.findall(r'\d+', context['price_raw'])[0]:
+            if not re.findall(self.number_regex, context['price_raw'])[0]:
                 return
 
-            parsed_price = float(re.findall(r'\d+', context['price_raw'])[0])
+            parsed_price = float(re.findall(self.number_regex, context['price_raw'])[0])
             if parsed_price.is_integer():
                 parsed_price = int(parsed_price)
 
