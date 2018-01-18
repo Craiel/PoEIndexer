@@ -24,9 +24,16 @@ itemEvaluation.add_ignore("The Signal Fire")
 itemEvaluation.add_ignore("Ventor's Gamble")
 itemEvaluation.add_ignore("Watcher's Eye")
 itemEvaluation.add_ignore("The Pariah")
+itemEvaluation.add_ignore("Kaom's Roots")
 
 def notify_important():
     ctypes.windll.user32.FlashWindow(ctypes.windll.kernel32.GetConsoleWindow(), True)
+
+def get_formated_falue(color, value):
+    return color + str(round(value, 0))
+
+def print_result_part(string):
+    print(string, end='', flush=True)
 
 def print_result(result):
 
@@ -48,16 +55,39 @@ def print_result(result):
     if result['gain'] > 25:
         rating += 2
 
-    header = "[{}] [{} - {}c/{}c/{}c - {}%] ".format(
-        time.strftime("%H:%M:%S"),
-        rating,
-        round(result['price'], 0),
-        round(result['value'], 0),
-        round(result['optimistic_value'], 0),
-        round(result['percent_decrease'])
-    )
+    if rating >= 8:
+        color = Fore.RED
+        notify_important()
+    elif rating >= 6:
+        color = Fore.MAGENTA
+    elif rating >= 4:
+        color = Fore.YELLOW
+    elif rating >= 2:
+        color = Fore.GREEN
+    else:
+        return
 
-    msg = "@{} Hi, I would like to buy your {} listed for {} {} in {} (stash tab \"{}\"; position: left {}, top {})".format(
+    print_result_part(color + " -------------------------------- ")
+
+    print()
+    print_result_part(color + "[{}] ".format(time.strftime("%H:%M:%S")))
+    print_result_part(Fore.WHITE + "{}% ({}c) ".format(
+        get_formated_falue(color, result['percent_decrease']),
+        get_formated_falue(color, result['gain'])))
+    print_result_part("OfferValue={}c, Value={}c ({}c)".format(
+        get_formated_falue(color, result['price']),
+        get_formated_falue(color, result['value']),
+        get_formated_falue(color, result['optimistic_value'])
+    ))
+
+    if result['currency'] is not None:
+        print_result_part(" Pay={} {}".format(
+            get_formated_falue(color, result['price_raw']),
+            result['currency_title']
+        ))
+
+    print()
+    print_result_part(Fore.WHITE + " -> @{} Hi, I would like to buy your {} listed for {} {} in {} (stash tab \"{}\"; position: left {}, top {})".format(
         result['character'],
         result['name'],
         result['price_raw'],
@@ -66,19 +96,9 @@ def print_result(result):
         result['stash'],
         result['pos'][0],
         result['pos'][1]
-    )
+    ))
 
-    if rating >= 8:
-        notify_important()
-        print(Fore.RED + header + msg)
-    elif rating >= 6:
-        print(Fore.YELLOW + header + msg)
-    elif rating >= 4:
-        print(Fore.GREEN + header + msg)
-    elif rating >= 2:
-        print(Fore.WHITE + header + msg)
-    else:
-        return
+    print()
 
 def main():
 
@@ -87,7 +107,7 @@ def main():
 
     itemEvaluation.set_league(league)
 
-    print(Fore.GREEN + "Searching for mispriced items...")
+    print("Searching for mispriced items...")
     url_api = "http://www.pathofexile.com/api/public-stash-tabs?id="
 
     # get the next change id

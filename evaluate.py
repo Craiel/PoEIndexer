@@ -241,7 +241,11 @@ class ItemEvaluation:
             if not re.findall(r'\d+', context['price_raw'])[0]:
                 return
 
-            context['price_raw'] = float(re.findall(r'\d+', context['price_raw'])[0])
+            parsed_price = float(re.findall(r'\d+', context['price_raw'])[0])
+            if parsed_price.is_integer():
+                parsed_price = int(parsed_price)
+
+            context['price_raw'] = parsed_price
 
         except:
             return False
