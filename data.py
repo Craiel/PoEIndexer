@@ -26,6 +26,7 @@ class IndexerData:
     _ninja_api = "http://api.poe.ninja/api/Data/"
     league = "Standard"
     cache_directory = "cache_data"
+    jeweler_prophecy_value = 18
     index = {}
 
     def __init__(self):
@@ -158,6 +159,16 @@ class IndexerData:
 
         results = 0
         result = 0
+
+        default_value = 0
+        for candidate in data_entry:
+            entry_links = candidate.get('links')
+            if entry_links < 5:
+                default_value = candidate.get('chaosValue')
+                if default_value is None:
+                    default_value = 0
+                break
+
         for candidate in data_entry:
             entry_class = candidate.get('itemClass')
             entry_links = candidate.get('links')
@@ -166,6 +177,11 @@ class IndexerData:
 
             value = candidate.get('chaosValue')
             if value is None:
+                continue
+
+            # Specific ignore, we don't want any five link costing more than base item + prophecy
+            # (jeweler prophecy)
+            if item_links == 5 and value >= default_value + self.jeweler_prophecy_value:
                 continue
 
             results += 1

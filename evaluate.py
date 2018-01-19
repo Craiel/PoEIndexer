@@ -13,13 +13,14 @@ class ItemEvaluation:
     stat_stashes_processed = 0
     stat_items_processed = 0
     ignore_list = []
+    character_ignore_list = []
     md5 = hashlib.md5()
     min_value = 1
     min_gain = 2
     min_percent_decrease = 30
     optimistic_multiplier = 0.9
     enable_cache = False
-    enable_debug = False
+    enable_debug = True
     number_regex = r"[-+]?\d*\.\d+|\d+"
 
     def __init__(self, indexer_data):
@@ -55,6 +56,9 @@ class ItemEvaluation:
 
     def add_ignore(self, name):
         self.ignore_list.append(name)
+
+    def add_character_ignore(self, name):
+        self.character_ignore_list.append(name)
 
     def _process_stash(self, stash):
         if stash is None:
@@ -112,6 +116,10 @@ class ItemEvaluation:
         for ignoreEntry in self.ignore_list:
             if ignoreEntry in context['name']:
                 # item is ignored
+                return None
+
+        for characterIgnoreEntry in self.character_ignore_list:
+            if characterIgnoreEntry in context['character']:
                 return None
 
         context['value'] = self.data.get_value(item)

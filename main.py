@@ -26,6 +26,8 @@ itemEvaluation.add_ignore("Watcher's Eye")
 itemEvaluation.add_ignore("The Pariah")
 itemEvaluation.add_ignore("Kaom's Roots")
 
+itemEvaluation.add_character_ignore("Kharthun")
+
 def notify_important():
     ctypes.windll.user32.FlashWindow(ctypes.windll.kernel32.GetConsoleWindow(), True)
 
