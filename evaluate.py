@@ -108,7 +108,7 @@ class ItemEvaluation:
             # Ignore this item, won't find any valid price info anyway
             return None
 
-        if context['name_raw'] is None or context['name_raw'] == '':
+        if context['name_raw'] is None or context['name_raw'] == '' or context['category'] == 'maps':
             context['name'] = item.get('typeLine')
         else:
             context['name'] = re.sub(r'<<.*>>', '', context['name_raw'])
