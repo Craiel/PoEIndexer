@@ -6,6 +6,7 @@ import time
 
 from pathlib import Path
 
+
 class ItemEvaluation:
     league = "Standard"
     cache_directory = "cache_evaluate"
@@ -157,6 +158,10 @@ class ItemEvaluation:
         if context['percent_decrease'] < self.min_percent_decrease:
             return None
 
+        self._rate_result(context)
+        if context['rating'] <= 0:
+            return None
+
         self._save_debug(context)
         self._save_result_to_cache(context)
 
@@ -192,33 +197,33 @@ class ItemEvaluation:
 
     @staticmethod
     def _update_item_currency(context):
-        price_raw = context['note']
-        if 'chaos' in price_raw or 'Chaos' in price_raw or 'caos' in price_raw:
+        price_raw = context['note'].lower()
+        if 'chaos' in price_raw or 'caos' in price_raw:
             currency = None
             currency_title = "chaos"
             pass
-        elif 'exa' in price_raw or 'Erhaben' in price_raw:
+        elif 'exa' in price_raw or 'erhaben' in price_raw:
             currency = "Exalted Orb"
             currency_title = "exalted"
-        elif 'alch' in price_raw or 'Alchemie' in price_raw or 'alq' in price_raw:
+        elif 'alch' in price_raw or 'alchemie' in price_raw or 'alq' in price_raw:
             currency = "Orb of Alchemy"
             currency_title = "alchemy"
         elif 'vaal' in price_raw:
             currency = "Vaal Orb"
             currency_title = "vaal"
-        elif 'chisel' in price_raw or 'Meißel' in price_raw:
+        elif 'chisel' in price_raw or 'meißel' in price_raw:
             currency = "Cartographer's Chisel"
             currency_title = "chisel"
-        elif 'chrom' in price_raw or 'crom' in price_raw or 'Färbung' in price_raw:
+        elif 'chrom' in price_raw or 'crom' in price_raw or 'färbung' in price_raw:
             currency = "Chromatic Orb"
             currency_title = "chromatic"
-        elif 'fuse' in price_raw or 'Verbindung' in price_raw or 'fus' in price_raw or 'fusión' in price_raw:
+        elif 'fuse' in price_raw or 'verbindung' in price_raw or 'fus' in price_raw or 'fusión' in price_raw:
             currency = "Orb of Fusing"
             currency_title = "fusing"
-        elif 'chance' in price_raw or 'Möglichkeiten' in price_raw:
+        elif 'chance' in price_raw or 'möglichkeiten' in price_raw:
             currency = "Orb of Chance"
             currency_title = "chance"
-        elif 'alt' in price_raw or 'Veränderung' in price_raw:
+        elif 'alt' in price_raw or 'veränderung' in price_raw:
             currency = "Orb of Alteration"
             currency_title = "alteration"
         elif 'mirror' in price_raw or 'mir' in price_raw:
@@ -245,7 +250,7 @@ class ItemEvaluation:
         elif 'regret' in price_raw:
             currency = "Orb of Regret"
             currency_title = "regret"
-        elif 'silver' in price_raw or 'Silver Coin' in price_raw:
+        elif 'silver' in price_raw or 'silver coin' in price_raw:
             currency = "Silver Coin"
             currency_title = "silver"
         elif 'wisdom' in price_raw or 'wis' in price_raw:
@@ -255,7 +260,7 @@ class ItemEvaluation:
             print("Unsupported Currency: " + price_raw)
             return False
 
-        context['price_raw'] = price_raw
+        context['price_raw'] = context['note']
         context['currency'] = currency
         context['currency_title'] = currency_title
 
@@ -288,3 +293,31 @@ class ItemEvaluation:
             return False
 
         return True
+
+    @staticmethod
+    def _rate_result(context):
+
+        context['rating'] = 0
+
+        # set the main rating based on the percentage gain
+        if context['percent_decrease'] >= 90:
+            if context['value'] <= 5:
+                # anything less or equal to 5c worth is always at rating 2
+                context['rating'] = 2
+            else:
+                context['rating'] = 4
+        elif context['percent_decrease'] >= 60:
+            if context['value'] <= 5:
+                # anything less or equal to 5c worth is always at rating 2
+                context['rating'] = 2
+            else:
+                context['rating'] = 3
+        elif context['percent_decrease'] >= 40:
+            context['rating'] = 2
+        elif context['percent_decrease'] >= 20:
+
+            # Ignore certain categories in low percentages
+            if context['category'] == 'maps':
+                return
+
+            context['rating'] = 1

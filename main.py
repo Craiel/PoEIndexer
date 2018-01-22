@@ -26,7 +26,15 @@ itemEvaluation.add_ignore("Watcher's Eye")
 itemEvaluation.add_ignore("The Pariah")
 itemEvaluation.add_ignore("Kaom's Roots")
 
+# Own characters
 itemEvaluation.add_character_ignore("Kharthun")
+itemEvaluation.add_character_ignore("Khertaz")
+itemEvaluation.add_character_ignore("Kherthaz")
+
+# Known Spammers / Abusers / Price Fixers
+itemEvaluation.add_character_ignore("Алилет")
+itemEvaluation.add_character_ignore("ТрясуВсеЧтоМожно")
+itemEvaluation.add_character_ignore("Ilnurka")
 
 def notify_important():
     ctypes.windll.user32.FlashWindow(ctypes.windll.kernel32.GetConsoleWindow(), True)
@@ -39,29 +47,15 @@ def print_result_part(string):
 
 def print_result(result):
 
-    rating = 0
-
-    # set the main rating based on the percentage gain
-    if result['percent_decrease'] >= 90:
-        rating += 8
-    elif result['percent_decrease'] >= 60:
-        rating += 6
-    elif result['percent_decrease'] >= 40:
-        rating += 4
-    elif result['percent_decrease'] >= 20:
-        rating += 2
-    else:
-        return
-
-    if rating >= 8:
+    if result['rating'] == 4:
         color = Fore.MAGENTA
         # won't notify on these, they are almost always mis-pricing
-    elif rating >= 6:
+    elif result['rating'] == 3:
         color = Fore.RED
         notify_important()
-    elif rating >= 4:
+    elif result['rating'] == 2:
         color = Fore.YELLOW
-    elif rating >= 2:
+    elif result['rating'] == 1:
         color = Fore.GREEN
     else:
         return
