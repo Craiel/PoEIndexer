@@ -128,7 +128,7 @@ class ItemEvaluation:
             if characterIgnoreEntry in context['character']:
                 return None
 
-        self.data.update_value(item)
+        self.data.update_value(context)
         if 'value' not in context or context['value'] < self.min_value:
             # print("No Value for " + name)
             return None
@@ -159,9 +159,11 @@ class ItemEvaluation:
             # Need to make at least min gain for this to be worth
             return None
 
-        if context['links'] == 5 and context['optimistic_value'] > self.jeweler_prophecy_value and context['default_value'] < 5:
-            # With jewelers prophecy 5 links are barely worth anything
-            return None
+        if 'links' in context and context['links'] == 5:
+            if context['default_value'] < 5:
+                # With jewelers prophecy 5 links are barely worth anything
+                # ignore if the non-linked price is low to begin with
+                return None
 
         context['percent_decrease'] = (context['gain'] / context['optimistic_value']) * 100
         if context['percent_decrease'] < self.min_percent_decrease:

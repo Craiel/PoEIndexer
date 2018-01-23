@@ -60,7 +60,8 @@ class IndexerData:
     def _update_link_count(context):
         sockets = context['raw_data'].get('sockets')
         if sockets is None:
-            return 0
+            context['links'] = 0
+            return
 
         count = 0
         for socket in sockets:
@@ -68,7 +69,7 @@ class IndexerData:
             if grp == 0:
                 count += 1
 
-        context['sockets'] = count
+        context['links'] = count
 
     def get_currency_conversion(self, currency_name):
         for currency in self.index[data_key_currency]:
@@ -150,9 +151,8 @@ class IndexerData:
 
     def _update_value_for_frame_and_link_match(self, context, data_entry):
         self._update_link_count(context)
-
         item_class = context['type']
-        item_links = context['sockets']
+        item_links = context['links']
         corrupted = context['corrupted']
         if corrupted is True:
             # For now we will ignore corrupted weapons and armor, too much variation in price
@@ -165,8 +165,8 @@ class IndexerData:
         for candidate in data_entry:
             entry_links = candidate.get('links')
             if entry_links < 5:
-                default_value = candidate.get('chaosValue')
-            if default_value is None:
+                context['default_value'] = candidate.get('chaosValue')
+            if context['default_value'] is None:
                 context['default_value'] = 0
             break
 
