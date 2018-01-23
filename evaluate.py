@@ -23,6 +23,7 @@ class ItemEvaluation:
     enable_cache = False
     enable_debug = True
     number_regex = r"[-+]?\d*\.\d+|\d+"
+    jeweler_prophecy_value = 18
 
     def __init__(self, indexer_data):
 
@@ -91,6 +92,7 @@ class ItemEvaluation:
         self.stat_items_processed += 1
 
         context = {
+            # 'raw_stash': stash,
             'raw_data': item,
             'id': item.get('id', None),
             'type': item.get('frameType', None),
@@ -101,6 +103,7 @@ class ItemEvaluation:
             'pos': [item.get('x'), item.get('y')],
             'stash': stash.get('stash'),
             'corrupted': item.get('corrupted') is not None,
+            'typeLine': item.get('typeLine')
         }
 
         if context['note'] is None \
@@ -109,10 +112,12 @@ class ItemEvaluation:
             # Ignore this item, won't find any valid price info anyway
             return None
 
-        if context['name_raw'] is None or context['name_raw'] == '' or context['category'] == 'maps':
+        if context['name_raw'] is None or context['name_raw'] == '':
             context['name'] = item.get('typeLine')
         else:
             context['name'] = re.sub(r'<<.*>>', '', context['name_raw'])
+            if context['category'] == 'maps':
+                context['name'] = context['name'] + ' ' + item.get('typeLine')
 
         for ignoreEntry in self.ignore_list:
             if ignoreEntry in context['name']:
@@ -123,8 +128,8 @@ class ItemEvaluation:
             if characterIgnoreEntry in context['character']:
                 return None
 
-        context['value'] = self.data.get_value(item)
-        if context['value'] is None or context['value'] < self.min_value:
+        self.data.update_value(item)
+        if 'value' not in context or context['value'] < self.min_value:
             # print("No Value for " + name)
             return None
 
@@ -152,6 +157,10 @@ class ItemEvaluation:
         context['gain'] = context['optimistic_value'] - context['price']
         if context['gain'] < self.min_gain:
             # Need to make at least min gain for this to be worth
+            return None
+
+        if context['links'] == 5 and context['optimistic_value'] > self.jeweler_prophecy_value and context['default_value'] < 5:
+            # With jewelers prophecy 5 links are barely worth anything
             return None
 
         context['percent_decrease'] = (context['gain'] / context['optimistic_value']) * 100
@@ -301,15 +310,15 @@ class ItemEvaluation:
 
         # set the main rating based on the percentage gain
         if context['percent_decrease'] >= 90:
-            if context['value'] <= 5:
-                # anything less or equal to 5c worth is always at rating 2
-                context['rating'] = 2
+            if context['value'] <= 5 and context['category'] != 'maps':
+                # anything except maps less or equal to 5c worth is always at rating 1
+                context['rating'] = 1
             else:
                 context['rating'] = 4
         elif context['percent_decrease'] >= 60:
-            if context['value'] <= 5:
-                # anything less or equal to 5c worth is always at rating 2
-                context['rating'] = 2
+            if context['value'] <= 5 and context['category'] != 'maps':
+                # anything except maps less or equal to 5c worth is always at rating 1
+                context['rating'] = 1
             else:
                 context['rating'] = 3
         elif context['percent_decrease'] >= 40:

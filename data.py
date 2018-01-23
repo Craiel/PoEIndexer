@@ -26,7 +26,6 @@ class IndexerData:
     _ninja_api = "http://api.poe.ninja/api/Data/"
     league = "Standard"
     cache_directory = "cache_data"
-    jeweler_prophecy_value = 18
     index = {}
 
     def __init__(self):
@@ -58,18 +57,18 @@ class IndexerData:
         pass
 
     @staticmethod
-    def get_link_count(item):
-        sockets = item.get('sockets')
+    def _update_link_count(context):
+        sockets = context['raw_data'].get('sockets')
         if sockets is None:
             return 0
 
         count = 0
-        for socket in item.get('sockets'):
+        for socket in sockets:
             grp = socket.get('group')
             if grp == 0:
                 count += 1
 
-        return count
+        context['sockets'] = count
 
     def get_currency_conversion(self, currency_name):
         for currency in self.index[data_key_currency]:
@@ -79,95 +78,97 @@ class IndexerData:
 
         return None
 
-    def get_value(self, item):
-        item_name = re.sub(r'<<.*>>', '', item.get('name', None))
-        category = item.get('category')
+    def update_value(self, context):
+        item_name = context['name']
+        category = context['category']
 
         if 'weapons' in category:
             for weapon in self.index[data_key_weapons]:
                 if weapon == item_name:
-                    value = self._frame_and_link_match_and_get_price(item, self.index[data_key_weapons][weapon])
-                    return value
+                    self._update_value_for_frame_and_link_match(context, self.index[data_key_weapons][weapon])
+                    return
 
         elif 'armour' in category:
             for armor in self.index[data_key_armor]:
                 if armor == item_name:
-                    value = self._frame_and_link_match_and_get_price(item, self.index[data_key_armor][armor])
-                    return value
+                    self._update_value_for_frame_and_link_match(context, self.index[data_key_armor][armor])
+                    return
 
         elif 'accessories' in category:
             for accessory in self.index[data_key_accessory]:
                 if accessory == item_name:
-                    value = self._generic_get_price_non_corrupt(item, self.index[data_key_accessory][accessory])
-                    return value
+                    self._update_value_generic_non_corrupt(context, self.index[data_key_accessory][accessory])
+                    return
 
         elif 'maps' in category:
             for map in self.index[data_key_unique_maps]:
                 if map == item_name:
-                    value = self._generic_get_price(self.index[data_key_unique_maps][map])
-                    return value
+                    self._update_value_generic(context, self.index[data_key_unique_maps][map])
+                    return
 
-            type_line = item.get('typeLine')
+            type_line = context['typeLine']
             for map in self.index[data_key_maps]:
                 if map == type_line:
-                    value = self._generic_get_price(self.index[data_key_maps][map])
-                    return value
+                    self._update_value_generic(context, self.index[data_key_maps][map])
+                    return
 
         elif 'jewels' in category:
             for jewel in self.index[data_key_jewels]:
                 if jewel == item_name:
-                    value = self._generic_get_price(self.index[data_key_jewels][jewel])
-                    return value
+                    self._update_value_generic(context, self.index[data_key_jewels][jewel])
+                    return
 
         elif 'cards' in category:
-            type_line = item.get('typeLine')
+            type_line = context['typeLine']
             for card in self.index[data_key_cards]:
                 if card == type_line:
-                    value = self._generic_get_price(self.index[data_key_cards][card])
-                    return value
+                    self._update_value_generic(context, self.index[data_key_cards][card])
+                    return
 
         elif 'flasks' in category:
             for flask in self.index[data_key_flasks]:
                 if flask == item_name:
-                    value = self._generic_get_price(self.index[data_key_flasks][flask])
-                    return value
+                    self._update_value_generic(context, self.index[data_key_flasks][flask])
+                    return
 
         elif 'gems' in category:
-            type_line = item.get('typeLine')
+            type_line = context['typeLine']
             for gem in self.index[data_key_skill_gem]:
                 if gem == type_line:
-                    value = self._generic_get_price(self.index[data_key_skill_gem][gem])
-                    return value
+                    self._update_value_generic(context, self.index[data_key_skill_gem][gem])
+                    return
 
         elif 'currency' in category:
             for currency in self.index[data_key_currency]:
                 if currency == item_name:
-                    value = self._generic_get_price(self.index[data_key_currency][currency])
-                    return value
+                    self._update_value_generic(context, self.index[data_key_currency][currency])
+                    return
         else:
             print("Unhandled Item Category: " + category)
 
         return None
 
-    def _frame_and_link_match_and_get_price(self, item, data_entry):
-        item_class = item.get('frameType', None)
-        item_links = self.get_link_count(item)
-        corrupted = item.get('corrupted')
-        if corrupted is not None:
+    def _update_value_for_frame_and_link_match(self, context, data_entry):
+        self._update_link_count(context)
+
+        item_class = context['type']
+        item_links = context['sockets']
+        corrupted = context['corrupted']
+        if corrupted is True:
             # For now we will ignore corrupted weapons and armor, too much variation in price
             return
 
         results = 0
         result = 0
 
-        default_value = 0
+        context['default_value'] = 0
         for candidate in data_entry:
             entry_links = candidate.get('links')
             if entry_links < 5:
                 default_value = candidate.get('chaosValue')
-                if default_value is None:
-                    default_value = 0
-                break
+            if default_value is None:
+                context['default_value'] = 0
+            break
 
         for candidate in data_entry:
             entry_class = candidate.get('itemClass')
@@ -179,11 +180,6 @@ class IndexerData:
             if value is None:
                 continue
 
-            # Specific ignore, we don't want any five link costing more than base item + prophecy
-            # (jeweler prophecy)
-            if item_links == 5 and value >= default_value + self.jeweler_prophecy_value:
-                continue
-
             results += 1
             result = value
 
@@ -191,11 +187,11 @@ class IndexerData:
             # Inconclusive, wont take the risk
             return 0
 
-        return result
+        context['value'] = result
 
-    def _generic_get_price_non_corrupt(self, item, data_entry):
-        corrupted = item.get('corrupted')
-        if corrupted is not None:
+    def _update_value_generic_non_corrupt(self, context, data_entry):
+        corrupted = context['corrupted']
+        if corrupted is True:
             # For now we will ignore corrupted weapons and armor, too much variation in price
             return
 
@@ -213,9 +209,9 @@ class IndexerData:
             # Inconclusive, wont take the risk
             return 0
 
-        return result
+        context['value'] = result
 
-    def _generic_get_price(self, data_entry):
+    def _update_value_generic(self, context, data_entry):
         results = 0
         result = 0
         for candidate in data_entry:
@@ -230,7 +226,7 @@ class IndexerData:
             # Inconclusive, wont take the risk
             return 0
 
-        return result
+        context['value'] = result
 
     def _get_data_cache_name(self, path):
         return time.strftime("%Y-%m-%d-%H") + "_" + self.league + "_" + path
