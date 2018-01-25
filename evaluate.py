@@ -267,6 +267,9 @@ class ItemEvaluation:
         elif 'wisdom' in price_raw or 'wis' in price_raw:
             currency = "Scroll of Wisdom"
             currency_title = "wisdom"
+        elif 'port' in price_raw or 'portal' in price_raw:
+            currency = "Portal Scroll"
+            currency_title = "portal"
         else:
             print("Unsupported Currency: " + price_raw)
             return False
