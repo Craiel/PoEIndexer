@@ -64,6 +64,7 @@ def print_result(result):
 
     print()
     print_result_part(color + "[{}] ".format(time.strftime("%H:%M:%S")))
+    print_result_part(" ~{}~ ".format(result['value_source_id']))
     print_result_part(Fore.WHITE + "{}% ({}c) ".format(
         get_formated_falue(color, result['percent_decrease']),
         get_formated_falue(color, result['gain'])))

@@ -27,7 +27,7 @@ class IndexerData:
     index = {}
 
     # some data got mixed up at some point and non-unique items made it into the result of unique lists, so we hard-ignore those for now
-    ignored_data_ids = [4809, 4810, 4813, 4814, 4815, 4816, 4817, 4818]
+    ignored_data_ids = [4809, 4810, 4813, 4814, 4815, 4816, 4817, 4818, 4819, 4821, 4822, 4823, 4824, 4825, 4826, 4827]
 
     def __init__(self):
 

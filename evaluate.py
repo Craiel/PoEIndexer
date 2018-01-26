@@ -133,6 +133,12 @@ class ItemEvaluation:
             # print("No Value for " + name)
             return None
 
+        if 'value_source' in context:
+            context['value_source_id'] = context['value_source'].get('id', None)
+
+        if 'value_source_id' not in context or context['value_source_id'] is None:
+            context['value_source_id'] = -1
+
         # compute a unique hash based on the id and the note field (which changes with price changes)
         hash_data = (str(context['id']) + context['note']).encode('utf-8')
         self.md5.update(hash_data)
