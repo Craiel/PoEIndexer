@@ -1,7 +1,6 @@
 import time
 import requests
 import os
-import re
 import json
 
 from pathlib import Path
@@ -20,13 +19,15 @@ data_key_unique_maps = "UniqueMaps"
 data_key_maps = "Maps"
 data_key_currency = "Currency"
 
-
 class IndexerData:
     _ninja_cdn = "http://cdn.poe.ninja/api/Data/"
     _ninja_api = "http://api.poe.ninja/api/Data/"
     league = "Standard"
     cache_directory = "cache_data"
     index = {}
+
+    # some data got mixed up at some point and non-unique items made it into the result of unique lists, so we hard-ignore those for now
+    ignored_data_ids = [4809, 4810, 4813, 4814, 4815, 4816, 4817, 4818]
 
     def __init__(self):
 
@@ -170,6 +171,7 @@ class IndexerData:
                 context['default_value'] = 0
             break
 
+        lastCandidate = None
         for candidate in data_entry:
             entry_class = candidate.get('itemClass')
             entry_links = candidate.get('links')
@@ -183,18 +185,24 @@ class IndexerData:
             results += 1
             result = value
 
-        if results > 1:
+            # for debug
+            lastCandidate = candidate
+
+        if results != 1:
             # Inconclusive, wont take the risk
             return 0
 
         context['value'] = result
+        context['value_source'] = lastCandidate
 
-    def _update_value_generic_non_corrupt(self, context, data_entry):
+    @staticmethod
+    def _update_value_generic_non_corrupt(context, data_entry):
         corrupted = context['corrupted']
         if corrupted is True:
             # For now we will ignore corrupted weapons and armor, too much variation in price
             return
 
+        lastCandidate = None
         results = 0
         result = 0
         for candidate in data_entry:
@@ -205,13 +213,18 @@ class IndexerData:
             results += 1
             result = value
 
-        if results > 1:
+            lastCandidate = candidate
+
+        if results != 1:
             # Inconclusive, wont take the risk
             return 0
 
         context['value'] = result
+        context['value_source'] = lastCandidate
 
-    def _update_value_generic(self, context, data_entry):
+    @staticmethod
+    def _update_value_generic(context, data_entry):
+        lastCandidate = None
         results = 0
         result = 0
         for candidate in data_entry:
@@ -221,12 +234,14 @@ class IndexerData:
 
             results += 1
             result = value
+            lastCandidate = candidate
 
-        if results > 1:
+        if results != 1:
             # Inconclusive, wont take the risk
             return 0
 
         context['value'] = result
+        context['value_source'] = lastCandidate
 
     def _get_data_cache_name(self, path):
         return time.strftime("%Y-%m-%d-%H") + "_" + self.league + "_" + path
@@ -244,6 +259,12 @@ class IndexerData:
 
         entry_count = 0
         for entry in data:
+            id = entry.get('id')
+            if id is not None:
+                if id in self.ignored_data_ids:
+                    print("Ignoring data entry id " + str(id))
+                    continue
+
             key = entry.get(entry_key)
             if key is None or key == "":
                 print("Invalid Entry in Data for " + data_key)
