@@ -16,8 +16,8 @@ class ItemEvaluation:
     ignore_list = []
     character_ignore_list = []
     md5 = hashlib.md5()
-    min_value = 1
-    min_gain = 2
+    min_value = 5
+    min_gain = 3
     min_percent_decrease = 30
     optimistic_multiplier = 0.9
     enable_cache = False
