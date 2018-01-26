@@ -23,7 +23,7 @@ class ItemEvaluation:
     enable_cache = False
     enable_debug = True
     number_regex = r"[-+]?\d*\.\d+|\d+"
-    jeweler_prophecy_value = 18
+    jeweler_prophecy_value = 16
 
     def __init__(self, indexer_data):
 
@@ -276,6 +276,9 @@ class ItemEvaluation:
         elif 'port' in price_raw or 'portal' in price_raw:
             currency = "Portal Scroll"
             currency_title = "portal"
+        elif 'sextant' in price_raw:
+            # ignore sextant trading for now
+            return False
         else:
             print("Unsupported Currency: " + price_raw)
             return False

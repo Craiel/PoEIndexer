@@ -5,6 +5,7 @@ import requests
 import data
 import evaluate
 import ctypes
+import ui
 
 from colorama import init
 from colorama import Fore
@@ -26,6 +27,9 @@ itemEvaluation.add_ignore("Watcher's Eye")
 itemEvaluation.add_ignore("The Pariah")
 itemEvaluation.add_ignore("Kaom's Roots")
 itemEvaluation.add_ignore("The Ascetic")
+itemEvaluation.add_ignore("Skin of the Loyal")
+itemEvaluation.add_ignore("Headhunter")
+itemEvaluation.add_ignore("The Saint's Treasure")
 
 # Own characters
 itemEvaluation.add_character_ignore("Kharthun")
@@ -37,6 +41,9 @@ itemEvaluation.add_character_ignore("Алилет")
 itemEvaluation.add_character_ignore("ТрясуВсеЧтоМожно")
 itemEvaluation.add_character_ignore("Ilnurka")
 itemEvaluation.add_character_ignore("Charge_Discharge")
+
+#uiApp = ui.UIApp()
+#uiApp.run()
 
 def notify_important():
     ctypes.windll.user32.FlashWindow(ctypes.windll.kernel32.GetConsoleWindow(), True)

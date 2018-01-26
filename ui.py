@@ -1,3 +1,6 @@
+import core
+from kivy.clock import Clock
+
 from kivy.app import App
 from kivy.uix.button import Button
 from kivy.animation import Animation
@@ -7,4 +10,8 @@ from kivy.animation import Animation
 # https://github.com/kivy/kivy/tree/master/examples/demo/showcase/data/screens
 
 class UIApp(App):
-    pass
+
+    def build(self):
+        indexer_core = core.IndexerCore()
+        Clock.schedule_interval(indexer_core.update, 1.0 / 60.0)
+        return indexer_core

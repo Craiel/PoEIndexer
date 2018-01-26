@@ -1,20 +1,23 @@
 #:kivy 1.0
 
-
-BoxLayout:
-    orientation: 'vertical'
-
-    canvas.before:
-        Color:
-            rgb: .6, .6, .6
+<IndexerCore>:
+    canvas:
         Rectangle:
-            size: self.size
-            source: 'data/background.png'
+            pos: self.center_x-5, 0
+            size: 10, self.height
 
-    ActionBar:
-        id: actionBar
+    Button:
+        text: "Hello World"
+        font_size: 14
 
-    ScrollView:
-        id: scrollView
-        size_hint_y: None
-        height: 0
+    Label:
+        font_size: 70
+        center_x: root.width / 4
+        top: root.top - 50
+        text: "0"
+
+    Label:
+        font_size: 70
+        center_x: root.width * 3 / 4
+        top: root.top - 50
+        text: "0"
