@@ -136,6 +136,10 @@ class IndexerData:
             # print("Unhandled Flask: " + item_name)
 
         elif 'gems' in category:
+            if context['typeLine'] == 'Vaal Breach':
+                # Invalid gems
+                return False
+
             if self._update_gem_value(context):
                 return
 
@@ -260,10 +264,6 @@ class IndexerData:
 
     def _update_gem_value(self, context):
         type_line = context['typeLine']
-        if type_line == 'Vaal Breach':
-            # Invalid gems
-            return False
-
         for gem in self.index[data_key_skill_gem]:
             if gem == type_line:
                 self._update_value_generic(context, self.index[data_key_skill_gem][gem])
