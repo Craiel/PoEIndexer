@@ -146,7 +146,10 @@ class IndexerData:
             print("Unhandled Gem: " + context['typeLine'])
 
         elif 'currency' in category:
-            if 'Chaos Orb' in item_name:
+            if 'Chaos Orb' in item_name or \
+                    "Cartographer's Seal" in item_name or \
+                    'Unshaping Orb' in item_name or \
+                    'Albino Rhoa Feather' in item_name:
                 return
 
             if 'Stacked Deck' in item_name:
