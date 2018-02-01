@@ -4,15 +4,18 @@ import hashlib
 import json
 import time
 
-from pathlib import Path
-
-
 class ItemEvaluation:
     league = "Standard"
     cache_directory = "cache_evaluate"
     data = None
     stat_stashes_processed = 0
     stat_items_processed = 0
+    stat_items_ignored = 0
+    stat_items_without_value = 0
+    stat_items_invalid_price = 0
+    stat_items_low_gain = 0
+    stat_items_low_rating = 0
+    stat_items_by_type = {}
     ignore_list = []
     character_ignore_list = []
     md5 = hashlib.md5()
@@ -62,6 +65,26 @@ class ItemEvaluation:
     def add_character_ignore(self, name):
         self.character_ignore_list.append(name)
 
+    def reset_stats(self):
+        self.stat_stashes_processed = 0
+        self.stat_items_processed = 0
+        self.stat_items_ignored = 0
+        self.stat_items_invalid_price = 0
+        self.stat_items_low_gain = 0
+        self.stat_items_low_rating = 0
+        self.stat_items_without_value = 0
+        self.stat_items_by_type = {}
+
+    def print_stats(self, elapsed):
+        print(" - Processed {} items in {} stashes ({}/s)".format(
+            self.stat_items_processed,
+            self.stat_stashes_processed,
+            round(self.stat_items_processed / elapsed, 0)
+        ))
+
+        print("   -> I={} V={} P={}".format(self.stat_items_ignored, self.stat_items_without_value, self.stat_items_invalid_price))
+        print("   -> G={} R={} ".format(self.stat_items_low_gain, self.stat_items_low_rating))
+
     def _process_stash(self, stash):
         if stash is None:
             return None
@@ -110,6 +133,7 @@ class ItemEvaluation:
                 or context['note'] == '' \
                 or not context['note'].startswith('~'):
             # Ignore this item, won't find any valid price info anyway
+            self.stat_items_ignored += 1
             return None
 
         if context['name_raw'] is None or context['name_raw'] == '':
@@ -122,15 +146,18 @@ class ItemEvaluation:
         for ignoreEntry in self.ignore_list:
             if ignoreEntry in context['name']:
                 # item is ignored
+                self.stat_items_ignored += 1
                 return None
 
         for characterIgnoreEntry in self.character_ignore_list:
             if characterIgnoreEntry in context['character']:
+                self.stat_items_ignored += 1
                 return None
 
         self.data.update_value(context)
         if 'value' not in context or context['value'] < self.min_value:
-            # print("No Value for " + name)
+            #print("No Value for " + context['name'])
+            self.stat_items_without_value += 1
             return None
 
         if 'value_source' in context:
@@ -144,57 +171,42 @@ class ItemEvaluation:
         self.md5.update(hash_data)
         context['hash'] = self.md5.hexdigest()
 
-        cached_result = self._load_result_from_cache(context['hash'])
-        if cached_result is not None:
-            age = time.time() - cached_result['time']
-            print('Cache_Age: ' + str(age))
-
-            return cached_result
-
         context['time'] = time.time()
 
         self._update_item_currency(context)
         self._update_item_price(context)
 
         if 'price' not in context or context['price'] is None or context['price'] < self.min_value:
+            self.stat_items_invalid_price += 1
             return None
 
         context['optimistic_value'] = context['value'] * self.optimistic_multiplier
         context['gain'] = context['optimistic_value'] - context['price']
         if context['gain'] < self.min_gain:
             # Need to make at least min gain for this to be worth
+            self.stat_items_low_gain += 1
             return None
 
         if 'links' in context and context['links'] == 5:
             if context['default_value'] < 5:
                 # With jewelers prophecy 5 links are barely worth anything
                 # ignore if the non-linked price is low to begin with
+                self.stat_items_ignored += 1
                 return None
 
         context['percent_decrease'] = (context['gain'] / context['optimistic_value']) * 100
         if context['percent_decrease'] < self.min_percent_decrease:
+            self.stat_items_low_gain += 1
             return None
 
         self._rate_result(context)
         if context['rating'] <= 0:
+            self.stat_items_low_rating += 1
             return None
 
         self._save_debug(context)
-        self._save_result_to_cache(context)
 
         return context
-
-    def _load_result_from_cache(self, hash):
-        if not self.enable_cache:
-            return None
-
-        cache_file = self.cache_directory + "/" + hash
-        my_file = Path(cache_file)
-        if my_file.is_file():
-            with open(cache_file) as json_data:
-                return json.load(json_data)
-
-        return None
 
     def _save_debug(self, result):
         if not self.enable_debug:
@@ -202,14 +214,6 @@ class ItemEvaluation:
 
         debug_file = self.cache_directory + "/" + str(result['time']) + "_" + str(result['id']) + "_" + result['name']
         with open(debug_file, 'w') as outfile:
-            json.dump(result, outfile)
-
-    def _save_result_to_cache(self, result):
-        if not self.enable_cache:
-            return
-
-        cache_file = self.cache_directory + "/" + result['hash']
-        with open(cache_file, 'w') as outfile:
             json.dump(result, outfile)
 
     @staticmethod
@@ -282,6 +286,9 @@ class ItemEvaluation:
         elif 'afilar' in price_raw:
             currency = "Blacksmith's Whetstone"
             currency_title = "whetstones"
+        elif 'burin' in price_raw:
+            # Unknown translation
+            return False
         else:
             print("Unsupported Currency: " + price_raw)
             return False

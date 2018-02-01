@@ -80,75 +80,206 @@ class IndexerData:
 
         return None
 
+    def _update_weapon_value(self, item_name, context):
+        for weapon in self.index[data_key_weapons]:
+            if weapon == item_name:
+                self._update_value_for_frame_and_link_match(context, self.index[data_key_weapons][weapon])
+                return
+
     def update_value(self, context):
         item_name = context['name']
         category = context['category']
 
         if 'weapons' in category:
-            for weapon in self.index[data_key_weapons]:
-                if weapon == item_name:
-                    self._update_value_for_frame_and_link_match(context, self.index[data_key_weapons][weapon])
-                    return
+            if self._update_weapon_value(item_name, context):
+                return
+
+            # print("Unhandled Weapon: " + item_name)
 
         elif 'armour' in category:
-            for armor in self.index[data_key_armor]:
-                if armor == item_name:
-                    self._update_value_for_frame_and_link_match(context, self.index[data_key_armor][armor])
-                    return
+            if self._update_armor_value(item_name, context):
+                return
+
+            # print("Unhandled Armor: " + item_name)
 
         elif 'accessories' in category:
-            for accessory in self.index[data_key_accessory]:
-                if accessory == item_name:
-                    self._update_value_generic_non_corrupt(context, self.index[data_key_accessory][accessory])
-                    return
+            if self._update_accessory_value(item_name, context):
+                return
+
+            # print("Unhandled Accessory: " + item_name)
 
         elif 'maps' in category:
-            for map in self.index[data_key_unique_maps]:
-                if map == item_name:
-                    self._update_value_generic(context, self.index[data_key_unique_maps][map])
-                    return
+            if self._update_map_value(item_name, context):
+                return
 
-            type_line = context['typeLine']
-            for map in self.index[data_key_maps]:
-                if map == type_line:
-                    self._update_value_generic(context, self.index[data_key_maps][map])
-                    return
+            if self._update_fragment_value(item_name, context):
+                return
+
+            print("Unhandled Map: " + item_name + " -> " + context['typeLine'])
 
         elif 'jewels' in category:
-            for jewel in self.index[data_key_jewels]:
-                if jewel == item_name:
-                    self._update_value_generic(context, self.index[data_key_jewels][jewel])
-                    return
+            if self._update_jewel_value(item_name, context):
+                return
+
+            # print("Unhandled Jewel: " + item_name)
 
         elif 'cards' in category:
-            type_line = context['typeLine']
-            for card in self.index[data_key_cards]:
-                if card == type_line:
-                    self._update_value_generic(context, self.index[data_key_cards][card])
-                    return
+            if self._update_card_value(context):
+                return
+
+            print("Unhandled Card: " + context['typeLine'])
 
         elif 'flasks' in category:
-            for flask in self.index[data_key_flasks]:
-                if flask == item_name:
-                    self._update_value_generic(context, self.index[data_key_flasks][flask])
-                    return
+            if self._update_flask_value(item_name, context):
+                return
+
+            # print("Unhandled Flask: " + item_name)
 
         elif 'gems' in category:
-            type_line = context['typeLine']
-            for gem in self.index[data_key_skill_gem]:
-                if gem == type_line:
-                    self._update_value_generic(context, self.index[data_key_skill_gem][gem])
-                    return
+            if self._update_gem_value(context):
+                return
+
+            print("Unhandled Gem: " + context['typeLine'])
 
         elif 'currency' in category:
-            for currency in self.index[data_key_currency]:
-                if currency == item_name:
-                    self._update_value_generic(context, self.index[data_key_currency][currency])
+            if 'Chaos Orb' in item_name:
+                return
+
+            if 'Stacked Deck' in item_name:
+                if self._update_card_value(context):
                     return
+
+            if 'Essence' in item_name or 'Remnant' in item_name:
+                if self._update_essence_value(item_name, context):
+                    return
+
+            if self._update_currency_value(item_name, context):
+                return
+
+            if self._update_fragment_value(item_name, context):
+                return
+
+            if self._update_prophecy_value(item_name, context):
+                return
+
+            print("Unhandled Currency: " + item_name)
+
         else:
             print("Unhandled Item Category: " + category)
 
         return None
+
+    def _update_armor_value(self, item_name, context):
+        for armor in self.index[data_key_armor]:
+            if armor == item_name:
+                self._update_value_for_frame_and_link_match(context, self.index[data_key_armor][armor])
+                return True
+
+        return False
+
+    def _update_accessory_value(self, item_name, context):
+        for accessory in self.index[data_key_accessory]:
+            if accessory == item_name:
+                self._update_value_generic_non_corrupt(context, self.index[data_key_accessory][accessory])
+                return True
+
+        return False
+
+    def _update_map_value(self, item_name, context):
+        candidates = []
+        for map in self.index[data_key_unique_maps]:
+            map_name = item_name.replace("Superior ", "")
+            if map == map_name:
+                self._update_value_generic(context, self.index[data_key_unique_maps][map])
+                return True
+
+        if len(candidates) > 0:
+            print(candidates)
+
+        type_line = context['typeLine']
+        for map in self.index[data_key_maps]:
+            map_name = type_line.replace("Superior ", "")
+            if map == map_name:
+                self._update_value_generic(context, self.index[data_key_maps][map])
+                return True
+
+            if map in item_name:
+                candidates.append(map)
+
+        if len(candidates) == 1:
+            self._update_value_generic(context, self.index[data_key_maps][candidates[0]])
+            return True
+        elif len(candidates) > 1:
+            print(" !! Map matches multiple candidates:")
+            print(candidates)
+
+        return False
+
+    def _update_fragment_value(self, item_name, context):
+        for fragment in self.index[data_key_fragments]:
+            if fragment == item_name:
+                self._update_value_generic(context, self.index[data_key_fragments][fragment])
+                return True
+
+        return False
+
+    def _update_jewel_value(self, item_name, context):
+        for jewel in self.index[data_key_jewels]:
+            if jewel == item_name:
+                self._update_value_generic(context, self.index[data_key_jewels][jewel])
+                return True
+
+        return False
+
+    def _update_card_value(self, context):
+        type_line = context['typeLine']
+        for card in self.index[data_key_cards]:
+            if card == type_line:
+                self._update_value_generic(context, self.index[data_key_cards][card])
+                return True
+
+        return False
+
+    def _update_flask_value(self, item_name, context):
+        for flask in self.index[data_key_flasks]:
+            if flask == item_name:
+                self._update_value_generic(context, self.index[data_key_flasks][flask])
+                return True
+
+        return False
+
+    def _update_gem_value(self, context):
+        type_line = context['typeLine']
+        for gem in self.index[data_key_skill_gem]:
+            if gem == type_line:
+                self._update_value_generic(context, self.index[data_key_skill_gem][gem])
+                return True
+
+        return False
+
+    def _update_essence_value(self, item_name, context):
+        for essence in self.index[data_key_essence]:
+            if essence == item_name:
+                self._update_value_generic(context, self.index[data_key_essence][essence])
+                return True
+
+        return False
+
+    def _update_currency_value(self, item_name, context):
+        for currency in self.index[data_key_currency]:
+            if currency == item_name:
+                self._update_value_generic(context, self.index[data_key_currency][currency])
+                return True
+
+        return False
+
+    def _update_prophecy_value(self, item_name, context):
+        for prophecy in self.index[data_key_prophecy]:
+            if prophecy == item_name:
+                self._update_value_generic(context, self.index[data_key_prophecy][prophecy])
+                return True
+
+        return False
 
     def _update_value_for_frame_and_link_match(self, context, data_entry):
         self._update_link_count(context)

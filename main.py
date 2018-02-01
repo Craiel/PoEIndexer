@@ -43,12 +43,16 @@ itemEvaluation.add_character_ignore("Ilnurka")
 itemEvaluation.add_character_ignore("Charge_Discharge")
 
 #uiApp = ui.UIApp()
-#uiApp.run()
+#uiApp.run
+
+lastStatisticTime = 0
+statisticInterval = 60 * 5
+
 
 def notify_important():
     ctypes.windll.user32.FlashWindow(ctypes.windll.kernel32.GetConsoleWindow(), True)
 
-def get_formated_falue(color, value):
+def get_formated_value(color, value):
     return color + str(round(value, 0))
 
 def print_result_part(string):
@@ -75,17 +79,17 @@ def print_result(result):
     print_result_part(color + "[{}] ".format(time.strftime("%H:%M:%S")))
     print_result_part(" ~{}~ ".format(result['value_source_id']))
     print_result_part(Fore.WHITE + "{}% ({}c) ".format(
-        get_formated_falue(color, result['percent_decrease']),
-        get_formated_falue(color, result['gain'])))
+        get_formated_value(color, result['percent_decrease']),
+        get_formated_value(color, result['gain'])))
     print_result_part("OfferValue={}c, Value={}c ({}c)".format(
-        get_formated_falue(color, result['price']),
-        get_formated_falue(color, result['value']),
-        get_formated_falue(color, result['optimistic_value'])
+        get_formated_value(color, result['price']),
+        get_formated_value(color, result['value']),
+        get_formated_value(color, result['optimistic_value'])
     ))
 
     if result['currency'] is not None:
         print_result_part(" Pay={} {}".format(
-            get_formated_falue(color, result['price_raw']),
+            get_formated_value(color, result['price_raw']),
             result['currency_title']
         ))
 
@@ -122,6 +126,8 @@ def main():
     if enabled == 0:
         return
 
+    lastStatisticTime = time.time()
+
     while True:
         params = {'id': next_change_id}
         r = requests.get(url_api, params=params)
@@ -140,6 +146,12 @@ def main():
 
         ## wait 5 seconds until parsing next structure
         time.sleep(1)
+
+        if time.time() - lastStatisticTime > statisticInterval:
+            lastStatisticTime = time.time()
+
+            itemEvaluation.print_stats(statisticInterval)
+            itemEvaluation.reset_stats()
 
 if __name__ == "__main__":
     #ui.UIApp().run()
