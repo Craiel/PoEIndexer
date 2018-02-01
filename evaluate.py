@@ -279,6 +279,9 @@ class ItemEvaluation:
         elif 'sextant' in price_raw:
             # ignore sextant trading for now
             return False
+        elif 'afilar' in price_raw:
+            currency = "Blacksmith's Whetstone"
+            currency_title = "whetstones"
         else:
             print("Unsupported Currency: " + price_raw)
             return False
