@@ -206,12 +206,22 @@ class IndexerData:
             if map in item_name:
                 candidates.append(map)
 
+        # lets see of any map matched our item (i.e ### <> Map of ###)
         if len(candidates) == 1:
             self._update_value_generic(context, self.index[data_key_maps][candidates[0]])
             return True
         elif len(candidates) > 1:
-            print(" !! Map matches multiple candidates:")
-            print(candidates)
+            # More than one map matched, (i.e Port Map, Shaped Port Map)
+            # pick the longer one (better match)
+            best_match = None
+            best_match_length = 0
+            for match in candidates:
+                if best_match is None or len(match) > best_match_length:
+                    best_match = match
+                    best_match_length = len(match)
+
+            self._update_value_generic(context, self.index[data_key_maps][best_match])
+            return True
 
         return False
 
@@ -250,6 +260,10 @@ class IndexerData:
 
     def _update_gem_value(self, context):
         type_line = context['typeLine']
+        if type_line == 'Vaal Breach':
+            # Invalid gems
+            return False
+
         for gem in self.index[data_key_skill_gem]:
             if gem == type_line:
                 self._update_value_generic(context, self.index[data_key_skill_gem][gem])
