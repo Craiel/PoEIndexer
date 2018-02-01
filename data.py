@@ -149,7 +149,8 @@ class IndexerData:
             if 'Chaos Orb' in item_name or \
                     "Cartographer's Seal" in item_name or \
                     'Unshaping Orb' in item_name or \
-                    'Albino Rhoa Feather' in item_name:
+                    'Albino Rhoa Feather' in item_name or \
+                    'Stacked Deck' in item_name:
                 return
 
             if 'Stacked Deck' in item_name:
