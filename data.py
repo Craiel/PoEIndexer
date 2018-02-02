@@ -150,7 +150,8 @@ class IndexerData:
                     "Cartographer's Seal" in item_name or \
                     'Unshaping Orb' in item_name or \
                     'Albino Rhoa Feather' in item_name or \
-                    'Stacked Deck' in item_name:
+                    'Stacked Deck' in item_name or \
+                    'Scroll of Wisdom' in item_name:
                 return
 
             if 'Stacked Deck' in item_name:
