@@ -289,6 +289,9 @@ class ItemEvaluation:
         elif 'burin' in price_raw:
             # Unknown translation
             return False
+        elif ' Shard' in price_raw or ' Fragment' in price_raw:
+            # ignore shards and fragments
+            return False
         else:
             print("Unsupported Currency: " + price_raw)
             return False
