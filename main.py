@@ -11,7 +11,7 @@ from colorama import init
 from colorama import Fore
 init()
 
-league = "Abyss"
+league = "Bestiary"
 initial_change_id = ""
 enabled = 1
 
@@ -31,16 +31,14 @@ itemEvaluation.add_ignore("Skin of the Loyal")
 itemEvaluation.add_ignore("Headhunter")
 itemEvaluation.add_ignore("The Saint's Treasure")
 
+# Set the maximum currency we are willing to spend
+itemEvaluation.max_currency_to_spend = 30
+
 # Own characters
-itemEvaluation.add_character_ignore("Kharthun")
-itemEvaluation.add_character_ignore("Khertaz")
-itemEvaluation.add_character_ignore("Kherthaz")
+itemEvaluation.add_character_ignore("Khartaz")
 
 # Known Spammers / Abusers / Price Fixers
-itemEvaluation.add_character_ignore("Алилет")
-itemEvaluation.add_character_ignore("ТрясуВсеЧтоМожно")
-itemEvaluation.add_character_ignore("Ilnurka")
-itemEvaluation.add_character_ignore("Charge_Discharge")
+#itemEvaluation.add_character_ignore("Алилет")
 
 #uiApp = ui.UIApp()
 #uiApp.run
@@ -110,6 +108,7 @@ def print_result(result):
 def main():
 
     dataLookup.set_league(league)
+    dataLookup.enable_gems = False
     dataLookup.reload()
 
     itemEvaluation.set_league(league)

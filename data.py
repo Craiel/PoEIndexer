@@ -25,6 +25,7 @@ class IndexerData:
     league = "Standard"
     cache_directory = "cache_data"
     index = {}
+    enable_gems = True,
 
     # some data got mixed up at some point and non-unique items made it into the result of unique lists, so we hard-ignore those for now
     ignored_data_ids = [4809, 4810, 4813, 4814, 4815, 4816, 4817, 4818, 4819, 4820, 4821, 4822, 4823, 4824, 4825, 4826, 4827]
@@ -136,11 +137,18 @@ class IndexerData:
             # print("Unhandled Flask: " + item_name)
 
         elif 'gems' in category:
+            if not self.enable_gems:
+                return
+
             if context['typeLine'] == 'Vaal Breach':
                 # Invalid gems
-                return False
+                return
 
             if self._update_gem_value(context):
+                return
+
+            if 'Vaal ' in context['typeLine']:
+                # ignore vaal gems
                 return
 
             print("Unhandled Gem: " + context['typeLine'])
@@ -151,7 +159,8 @@ class IndexerData:
                     'Unshaping Orb' in item_name or \
                     'Albino Rhoa Feather' in item_name or \
                     'Stacked Deck' in item_name or \
-                    'Scroll of Wisdom' in item_name:
+                    'Scroll of Wisdom' in item_name or \
+                    'Harbinger\'s Shard' in item_name:
                 return
 
             if 'Stacked Deck' in item_name:
@@ -169,6 +178,10 @@ class IndexerData:
                 return
 
             if self._update_prophecy_value(item_name, context):
+                return
+
+            if ' Net' in item_name:
+                # ignore nets
                 return
 
             print("Unhandled Currency: " + item_name)
@@ -473,12 +486,15 @@ class IndexerData:
         data = self._load_data(link, self._get_data_cache_name(data_key_prophecy))
         self._index_data(data_key_prophecy, data, "name")
 
-    def _reload_essences(self):
+    def _reload_skill_gems(self):
+        if not self.enable_gems:
+            return
+
         link = self._get_ninja_link(1, "GetSkillGemOverview")
         data = self._load_data(link, self._get_data_cache_name(data_key_skill_gem))
         self._index_data(data_key_skill_gem, data, "name")
 
-    def _reload_skill_gems(self):
+    def _reload_essences(self):
         link = self._get_ninja_link(1, "GetEssenceOverview")
         data = self._load_data(link, self._get_data_cache_name(data_key_essence))
         self._index_data(data_key_essence, data, "name")

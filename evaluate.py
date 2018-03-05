@@ -27,6 +27,7 @@ class ItemEvaluation:
     enable_debug = True
     number_regex = r"[-+]?\d*\.\d+|\d+"
     jeweler_prophecy_value = 16
+    max_currency_to_spend = 999999999999
 
     def __init__(self, indexer_data):
 
@@ -178,6 +179,10 @@ class ItemEvaluation:
 
         if 'price' not in context or context['price'] is None or context['price'] < self.min_value:
             self.stat_items_invalid_price += 1
+            return None
+
+        if context['value'] > self.max_currency_to_spend:
+            # this item is too expensive right now
             return None
 
         context['optimistic_value'] = context['value'] * self.optimistic_multiplier
