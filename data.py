@@ -160,7 +160,13 @@ class IndexerData:
                     'Albino Rhoa Feather' in item_name or \
                     'Stacked Deck' in item_name or \
                     'Scroll of Wisdom' in item_name or \
-                    'Harbinger\'s Shard' in item_name:
+                    'Harbinger\'s Shard' in item_name or \
+                    'Alchemy Shard' in item_name or \
+                    'Scroll Fragment' in item_name or \
+                    'Horizon Shard' in item_name or \
+                    'Engineer\'s Shard' in item_name or \
+                    'Binding Shard' in item_name or \
+                    'Ancient Shard' in item_name:
                 return
 
             if 'Stacked Deck' in item_name:
