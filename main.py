@@ -11,7 +11,7 @@ from colorama import init
 from colorama import Fore
 init()
 
-league = "Bestiary"
+league = "Incursion"
 initial_change_id = ""
 enabled = 1
 
@@ -30,12 +30,14 @@ itemEvaluation.add_ignore("The Ascetic")
 itemEvaluation.add_ignore("Skin of the Loyal")
 itemEvaluation.add_ignore("Headhunter")
 itemEvaluation.add_ignore("The Saint's Treasure")
+itemEvaluation.add_ignore("Umbilicus Immortalis")
+itemEvaluation.add_ignore("Hall of Grandmasters")
 
 # Set the maximum currency we are willing to spend
-itemEvaluation.max_currency_to_spend = 30
+itemEvaluation.max_currency_to_spend = 99999
 
 # Own characters
-itemEvaluation.add_character_ignore("Khartaz")
+itemEvaluation.add_character_ignore("Cerkhar")
 
 # Known Spammers / Abusers / Price Fixers
 #itemEvaluation.add_character_ignore("Алилет")
@@ -117,7 +119,7 @@ def main():
     url_api = "http://www.pathofexile.com/api/public-stash-tabs?id="
 
     # get the next change id
-    r = requests.get("http://api.poe.ninja/api/Data/GetStats")
+    r = requests.get("http://poe.ninja/api/Data/GetStats")
     next_change_id = initial_change_id
     if next_change_id == "":
         next_change_id = r.json().get('next_change_id')

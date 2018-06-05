@@ -20,15 +20,16 @@ data_key_maps = "Maps"
 data_key_currency = "Currency"
 
 class IndexerData:
-    _ninja_cdn = "http://cdn.poe.ninja/api/Data/"
-    _ninja_api = "http://api.poe.ninja/api/Data/"
+    _ninja_api = "http://poe.ninja/api/Data/"
+    _ninja_item_overview_func = "itemoverview"
+    _ninja_currency_overview_func = "currencyoverview";
     league = "Standard"
     cache_directory = "cache_data"
     index = {}
     enable_gems = True,
 
     # some data got mixed up at some point and non-unique items made it into the result of unique lists, so we hard-ignore those for now
-    ignored_data_ids = [4809, 4810, 4813, 4814, 4815, 4816, 4817, 4818, 4819, 4820, 4821, 4822, 4823, 4824, 4825, 4826, 4827]
+    ignored_data_ids = []
 
     def __init__(self):
 
@@ -166,7 +167,9 @@ class IndexerData:
                     'Horizon Shard' in item_name or \
                     'Engineer\'s Shard' in item_name or \
                     'Binding Shard' in item_name or \
-                    'Ancient Shard' in item_name:
+                    'Ancient Shard' in item_name or \
+                    'Piece of' in item_name or \
+                    'Vial of' in item_name:
                 return
 
             if 'Stacked Deck' in item_name:
@@ -415,13 +418,8 @@ class IndexerData:
     def _get_data_cache_name(self, path):
         return time.strftime("%Y-%m-%d-%H") + "_" + self.league + "_" + path
 
-    def _get_ninja_link(self, is_cdn, path):
-        if is_cdn == 1:
-            link = self._ninja_cdn
-        else:
-            link = self._ninja_api
-        link += path + "?league=" + self.league + "&date=" + time.strftime("%Y-%m-%d")
-        return link
+    def _get_ninja_link(self, overviewFunc, overviewType):
+        return self._ninja_api + overviewFunc + "?league=" + self.league + "&type=" + overviewType + "&date=" + time.strftime("%Y-%m-%d")
 
     def _index_data(self, data_key, data, entry_key):
         self.index[data_key] = {}
@@ -467,28 +465,29 @@ class IndexerData:
 
             return data
 
+    # itemoverview
     def _reload_armor(self):
-        link = self._get_ninja_link(1, "GetUniqueArmourOverview")
+        link = self._get_ninja_link(self._ninja_item_overview_func, "UniqueArmour")
         data = self._load_data(link, self._get_data_cache_name(data_key_armor))
         self._index_data(data_key_armor, data, "name")
 
     def _reload_weapons(self):
-        link = self._get_ninja_link(1, "GetUniqueWeaponOverview")
+        link = self._get_ninja_link(self._ninja_item_overview_func, "UniqueWeapon")
         data = self._load_data(link, self._get_data_cache_name(data_key_weapons))
         self._index_data(data_key_weapons, data, "name")
 
     def _reload_accessories(self):
-        link = self._get_ninja_link(1, "GetUniqueAccessoryOverview")
+        link = self._get_ninja_link(self._ninja_item_overview_func, "UniqueAccessory")
         data = self._load_data(link, self._get_data_cache_name(data_key_accessory))
         self._index_data(data_key_accessory, data, "name")
 
     def _reload_fragments(self):
-        link = self._get_ninja_link(1, "GetFragmentOverview")
+        link = self._get_ninja_link(self._ninja_currency_overview_func, "Fragment")
         data = self._load_data(link, self._get_data_cache_name(data_key_fragments))
         self._index_data(data_key_fragments, data, "currencyTypeName")
 
     def _reload_prophecies(self):
-        link = self._get_ninja_link(1, "GetProphecyOverview")
+        link = self._get_ninja_link(self._ninja_item_overview_func, "Prophecy")
         data = self._load_data(link, self._get_data_cache_name(data_key_prophecy))
         self._index_data(data_key_prophecy, data, "name")
 
@@ -496,39 +495,39 @@ class IndexerData:
         if not self.enable_gems:
             return
 
-        link = self._get_ninja_link(1, "GetSkillGemOverview")
+        link = self._get_ninja_link(self._ninja_item_overview_func, "SkillGem")
         data = self._load_data(link, self._get_data_cache_name(data_key_skill_gem))
         self._index_data(data_key_skill_gem, data, "name")
 
     def _reload_essences(self):
-        link = self._get_ninja_link(1, "GetEssenceOverview")
+        link = self._get_ninja_link(self._ninja_item_overview_func, "Essence")
         data = self._load_data(link, self._get_data_cache_name(data_key_essence))
         self._index_data(data_key_essence, data, "name")
 
     def _reload_divination_cards(self):
-        link = self._get_ninja_link(0, "GetDivinationCardsOverview")
+        link = self._get_ninja_link(self._ninja_item_overview_func, "DivinationCard")
         data = self._load_data(link, self._get_data_cache_name(data_key_cards))
         self._index_data(data_key_cards, data, "name")
 
     def _reload_flasks(self):
-        link = self._get_ninja_link(0, "GetUniqueFlaskOverview")
+        link = self._get_ninja_link(self._ninja_item_overview_func, "UniqueFlask")
         data = self._load_data(link, self._get_data_cache_name(data_key_flasks))
         self._index_data(data_key_flasks, data, "name")
 
     def _reload_jewels(self):
-        link = self._get_ninja_link(0, "GetUniqueJewelOverview")
+        link = self._get_ninja_link(self._ninja_item_overview_func, "UniqueJewel")
         data = self._load_data(link, self._get_data_cache_name(data_key_jewels))
         self._index_data(data_key_jewels, data, "name")
 
     def _reload_maps(self):
-        link = self._get_ninja_link(1, "GetUniqueMapOverview")
+        link = self._get_ninja_link(self._ninja_item_overview_func, "UniqueMap")
         data = self._load_data(link, self._get_data_cache_name(data_key_unique_maps))
         self._index_data(data_key_unique_maps, data, "name")
-        link = self._get_ninja_link(1, "GetMapOverview")
+        link = self._get_ninja_link(self._ninja_item_overview_func, "Map")
         data = self._load_data(link, self._get_data_cache_name(data_key_maps))
         self._index_data(data_key_maps, data, "name")
 
     def _reload_currency(self):
-        link = self._get_ninja_link(1, "GetCurrencyOverview")
+        link = self._get_ninja_link(self._ninja_currency_overview_func, "Currency")
         data = self._load_data(link, self._get_data_cache_name(data_key_currency))
         self._index_data(data_key_currency, data, "currencyTypeName")
