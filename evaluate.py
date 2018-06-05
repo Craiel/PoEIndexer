@@ -10,6 +10,7 @@ class ItemEvaluation:
     data = None
     stat_stashes_processed = 0
     stat_items_processed = 0
+    stat_items_not_for_sale = 0
     stat_items_ignored = 0
     stat_items_without_value = 0
     stat_items_invalid_price = 0
@@ -69,6 +70,7 @@ class ItemEvaluation:
     def reset_stats(self):
         self.stat_stashes_processed = 0
         self.stat_items_processed = 0
+        self.stat_items_not_for_sale = 0;
         self.stat_items_ignored = 0
         self.stat_items_invalid_price = 0
         self.stat_items_low_gain = 0
@@ -83,7 +85,7 @@ class ItemEvaluation:
             round(self.stat_items_processed / elapsed, 0)
         ))
 
-        print("   -> I={} V={} P={}".format(self.stat_items_ignored, self.stat_items_without_value, self.stat_items_invalid_price))
+        print("   -> NS={} I={} V={} P={}".format(self.stat_items_not_for_sale, self.stat_items_ignored, self.stat_items_without_value, self.stat_items_invalid_price))
         print("   -> G={} R={} ".format(self.stat_items_low_gain, self.stat_items_low_rating))
 
     def _process_stash(self, stash):
@@ -130,11 +132,13 @@ class ItemEvaluation:
             'typeLine': item.get('typeLine')
         }
 
-        if context['note'] is None \
-                or context['note'] == '' \
-                or not context['note'].startswith('~'):
+        if context['note'] is None or context['note'] == '':
             # Ignore this item, won't find any valid price info anyway
-            self.stat_items_ignored += 1
+            self.stat_items_not_for_sale += 1
+            return None
+
+        if not context['note'].startswith('~'):
+            self.stat_items_not_for_sale += 1
             return None
 
         if context['name_raw'] is None or context['name_raw'] == '':

@@ -168,6 +168,7 @@ class IndexerData:
                     'Engineer\'s Shard' in item_name or \
                     'Binding Shard' in item_name or \
                     'Ancient Shard' in item_name or \
+                    'Chaos Shard' in item_name or \
                     'Piece of' in item_name or \
                     'Vial of' in item_name:
                 return
