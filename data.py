@@ -22,7 +22,7 @@ data_key_currency = "Currency"
 class IndexerData:
     _ninja_api = "http://poe.ninja/api/Data/"
     _ninja_item_overview_func = "itemoverview"
-    _ninja_currency_overview_func = "currencyoverview";
+    _ninja_currency_overview_func = "currencyoverview"
     league = "Standard"
     cache_directory = "cache_data"
     index = {}
@@ -73,6 +73,97 @@ class IndexerData:
                 count += 1
 
         context['links'] = count
+
+    @staticmethod
+    def _update_item_map_tier(context):
+        properties = context['raw_data'].get('properties')
+        if properties is None:
+            return
+
+        for prop in properties:
+            if prop['name'] != "Map Tier":
+                continue
+
+            context['map_tier'] = prop['values'][0]
+            return
+
+    def _update_item_variant(self, context, expected_variant):
+        if expected_variant == "Atlas2":
+            context['variant'] = expected_variant
+            return
+
+        explicit = context['raw_data'].get('explicitMods')
+        if explicit is None or len(explicit) == 0:
+            context['variant'] = None
+            return
+
+        if context['name'] == "Lightpoacher" \
+                or context['name'] == "Bubonic Trail"\
+                or context['name'] == "Tombfist"\
+                or context['name'] == "Shroud of the Lightless":
+            if explicit[0] == 'Has 2 Abyssal Sockets':
+                context['variant'] = '2 Jewels'
+                return
+
+            if explicit[0] == 'Has 1 Abyssal Socket':
+                context['variant'] = '1 Jewel'
+                return
+
+        if context['name'] == "Volkuur's Guidance":
+            if ' Lightning Damage to Spells and Attacks' in explicit[0]:
+                context['variant'] = 'Lightning'
+                return
+
+            if ' Fire Damage to Spells and Attacks' in explicit[0]:
+                context['variant'] = 'Fire'
+                return
+
+            if ' Cold Damage to Spells and Attacks' in explicit[0]:
+                context['variant'] = 'Cold'
+                return
+
+        if context['name'] == "Impresence"\
+                or context['name'] == "Doryani's Invitation":
+            if ' Damage over Time' in explicit[0]:
+                context['variant'] = 'Chaos'
+                return
+
+            if ' Lightning Damage' in explicit[0]:
+                context['variant'] = 'Lightning'
+                return
+
+            if ' Fire Damage' in explicit[0]:
+                context['variant'] = 'Fire'
+                return
+
+            if ' Cold Damage' in explicit[0]:
+                context['variant'] = 'Cold'
+                return
+
+            if ' Physical Damage' in explicit[0]:
+                context['variant'] = 'Physical'
+                return
+
+        if context['name'] == "Yriel's Fostering":
+            if ' Bestial Rhoa Skill' in explicit[0]:
+                context['variant'] = 'Maim'
+                return
+
+            if ' Bestial Snake Skill' in explicit[0]:
+                context['variant'] = 'Poison'
+                return
+
+            if ' Bestial Ursa Skill' in explicit[0]:
+                context['variant'] = 'Bleeding'
+                return
+
+        if context['name'] == "The Beachhead":
+            self._update_item_map_tier(context)
+            context['variant'] = "T" + str(context['map_tier'])
+            return
+
+        print("Could not determine item variant: " + str(explicit))
+        context['variant'] = None
 
     def get_currency_conversion(self, currency_name):
         for currency in self.index[data_key_currency]:
@@ -339,82 +430,134 @@ class IndexerData:
         for candidate in data_entry:
             entry_links = candidate.get('links')
             if entry_links < 5:
-                context['default_value'] = candidate.get('chaosValue')
+                context['default_value'] = candidate.get('internal_value')
             if context['default_value'] is None:
                 context['default_value'] = 0
             break
 
-        lastCandidate = None
+        matches = []
         for candidate in data_entry:
             entry_class = candidate.get('itemClass')
             entry_links = candidate.get('links')
-            if entry_class != item_class or entry_links != item_links:
+            entry_variant = candidate.get('variant')
+
+            if entry_variant is not None:
+                self._update_item_variant(context, entry_variant)
+                item_variant = context['variant']
+
+                if entry_variant != item_variant:
+                    if item_variant is None:
+                        print("Variant Mismatch: " + entry_variant)
+                        print(context['raw_data'])
+                    continue
+
+            if item_links >= 5:
+                if entry_links != item_links:
+                    #print("Item Link Requirement mimatch: " + str(item_links))
+                    continue
+            else:
+                if entry_links >= 5:
+                    #print("Candidate Link Requirement mismatch " + str(entry_links))
+                    continue
+
+            if entry_class != item_class:
+                #print("Class Requirement Mismatch: " + str(entry_class) + " != " + str(item_class) + " || " + str(entry_links) + " != " + str(item_links))
                 continue
 
-            value = candidate.get('chaosValue')
-            if value is None:
-                continue
+            value = candidate.get('internal_value')
 
             results += 1
             result = value
 
             # for debug
-            lastCandidate = candidate
+            matches.append(candidate)
+
+        if results == 0:
+            # No results
+            return 0
 
         if results != 1:
             # Inconclusive, wont take the risk
+            print("Inconclusive: " + str(results))
+            print(matches)
             return 0
 
         context['value'] = result
-        context['value_source'] = lastCandidate
+        context['value_source'] = matches[0]
 
-    @staticmethod
-    def _update_value_generic_non_corrupt(context, data_entry):
+    def _update_value_generic_non_corrupt(self, context, data_entry):
         corrupted = context['corrupted']
         if corrupted is True:
             # For now we will ignore corrupted weapons and armor, too much variation in price
             return
 
-        lastCandidate = None
+        matches = []
         results = 0
         result = 0
         for candidate in data_entry:
-            value = candidate.get('chaosValue')
-            if value is None:
-                continue
+            entry_variant = candidate.get('variant')
+            if entry_variant is not None:
+                self._update_item_variant(context, entry_variant)
+                item_variant = context['variant']
+
+                if entry_variant != item_variant:
+                    if item_variant is None:
+                        print("Variant Mismatch: " + entry_variant)
+                        print(context['raw_data'])
+                    continue
+
+            value = candidate.get('internal_value')
 
             results += 1
             result = value
 
-            lastCandidate = candidate
+            matches.append(candidate)
+
+        if results == 0:
+            return 0
 
         if results != 1:
             # Inconclusive, wont take the risk
+            print("Inconclusive: " + str(results))
+            print(matches)
             return 0
 
         context['value'] = result
-        context['value_source'] = lastCandidate
+        context['value_source'] = matches[0]
 
-    @staticmethod
-    def _update_value_generic(context, data_entry):
-        lastCandidate = None
+    def _update_value_generic(self, context, data_entry):
+        matches = []
         results = 0
         result = 0
         for candidate in data_entry:
-            value = candidate.get('chaosValue')
-            if value is None:
-                continue
+            entry_variant = candidate.get('variant')
+            if entry_variant is not None:
+                self._update_item_variant(context, entry_variant)
+                item_variant = context['variant']
+
+                if entry_variant != item_variant:
+                    if item_variant is None:
+                        print("Variant Mismatch: " + entry_variant)
+                        print(context['raw_data'])
+                    continue
+
+            value = candidate.get('internal_value')
 
             results += 1
             result = value
-            lastCandidate = candidate
+            matches.append(candidate)
+
+        if results == 0:
+            return 0
 
         if results != 1:
             # Inconclusive, wont take the risk
+            print("Inconclusive: " + str(results))
+            print(matches)
             return 0
 
         context['value'] = result
-        context['value_source'] = lastCandidate
+        context['value_source'] = matches[0]
 
     def _get_data_cache_name(self, path):
         return time.strftime("%Y-%m-%d-%H") + "_" + self.league + "_" + path
@@ -427,13 +570,24 @@ class IndexerData:
 
         entry_count = 0
         for entry in data:
-            id = entry.get('id')
-            if id is not None:
-                if id in self.ignored_data_ids:
-                    print("Ignoring data entry id " + str(id))
+            entry_id = entry.get('id')
+            if entry_id is not None:
+                if entry_id in self.ignored_data_ids:
+                    print("Ignoring data entry id " + str(entry_id))
                     continue
 
             key = entry.get(entry_key)
+
+            value = entry.get('chaosValue')
+            if value is None:
+                value = entry.get('chaosEquivalent')
+
+            if value is None:
+                print("Data Entry has no Value: " + data_key + " -- " + key)
+                continue
+
+            entry['internal_value'] = value
+
             if key is None or key == "":
                 print("Invalid Entry in Data for " + data_key)
                 continue

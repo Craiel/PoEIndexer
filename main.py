@@ -5,7 +5,6 @@ import requests
 import data
 import evaluate
 import ctypes
-import ui
 
 from colorama import init
 from colorama import Fore
@@ -17,21 +16,11 @@ enabled = 1
 
 dataLookup = data.IndexerData()
 itemEvaluation = evaluate.ItemEvaluation(dataLookup)
-itemEvaluation.add_ignore("Atziri")
-itemEvaluation.add_ignore("Sadima")
-itemEvaluation.add_ignore("Vinktar")
-itemEvaluation.add_ignore("Yriel's Fostering")
-itemEvaluation.add_ignore("The Signal Fire")
-itemEvaluation.add_ignore("Ventor's Gamble")
-itemEvaluation.add_ignore("Watcher's Eye")
-itemEvaluation.add_ignore("The Pariah")
-itemEvaluation.add_ignore("Kaom's Roots")
-itemEvaluation.add_ignore("The Ascetic")
-itemEvaluation.add_ignore("Skin of the Loyal")
-itemEvaluation.add_ignore("Headhunter")
-itemEvaluation.add_ignore("The Saint's Treasure")
-itemEvaluation.add_ignore("Umbilicus Immortalis")
-itemEvaluation.add_ignore("Hall of Grandmasters")
+itemEvaluation.add_ignore("Grand Spectrum")  # variations are not easy to distinguish in data
+itemEvaluation.add_ignore("Atziri's Splendour")  # too many variations
+itemEvaluation.add_ignore("Vessel of Vinktar")  # too many variations / hard to distinguish
+itemEvaluation.add_ignore("Watcher's Eye")  # extremely variable rolls, impossible to price right for now
+itemEvaluation.add_ignore("Ventor's Gamble")  # variable rarity rolls influence the price too much
 
 # Set the maximum currency we are willing to spend
 itemEvaluation.max_currency_to_spend = 99999
@@ -42,12 +31,8 @@ itemEvaluation.add_character_ignore("Cerkhar")
 # Known Spammers / Abusers / Price Fixers
 #itemEvaluation.add_character_ignore("Алилет")
 
-#uiApp = ui.UIApp()
-#uiApp.run
-
 lastStatisticTime = 0
 statisticInterval = 60 * 5
-
 
 def notify_important():
     ctypes.windll.user32.FlashWindow(ctypes.windll.kernel32.GetConsoleWindow(), True)
