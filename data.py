@@ -27,12 +27,14 @@ class IndexerData:
     cache_directory = "cache_data"
     index = {}
     enable_gems = True,
+    customizer = None
 
     # some data got mixed up at some point and non-unique items made it into the result of unique lists, so we hard-ignore those for now
     ignored_data_ids = []
 
-    def __init__(self):
+    def __init__(self, customizer):
 
+        self.customizer = customizer
         if not os.path.exists(self.cache_directory):
             os.makedirs(self.cache_directory)
 
@@ -173,12 +175,6 @@ class IndexerData:
 
         return None
 
-    def _update_weapon_value(self, item_name, context):
-        for weapon in self.index[data_key_weapons]:
-            if weapon == item_name:
-                self._update_value_for_frame_and_link_match(context, self.index[data_key_weapons][weapon])
-                return
-
     def update_value(self, context):
         item_name = context['name']
         category = context['category']
@@ -292,13 +288,21 @@ class IndexerData:
 
         return None
 
+    def _update_weapon_value(self, item_name, context):
+        for weapon in self.index[data_key_weapons]:
+            if weapon == item_name:
+                self._update_value_for_frame_and_link_match(context, self.index[data_key_weapons][weapon])
+                return True
+
+        return self.customizer.GetCustomWeaponValue(item_name, context)
+
     def _update_armor_value(self, item_name, context):
         for armor in self.index[data_key_armor]:
             if armor == item_name:
                 self._update_value_for_frame_and_link_match(context, self.index[data_key_armor][armor])
                 return True
 
-        return False
+        return self.customizer.GetCustomArmorValue(item_name, context)
 
     def _update_accessory_value(self, item_name, context):
         for accessory in self.index[data_key_accessory]:
@@ -306,7 +310,7 @@ class IndexerData:
                 self._update_value_generic_non_corrupt(context, self.index[data_key_accessory][accessory])
                 return True
 
-        return False
+        return self.customizer.GetCustomAccessoryValue(item_name, context)
 
     def _update_map_value(self, item_name, context):
         candidates = []
@@ -362,7 +366,7 @@ class IndexerData:
                 self._update_value_generic(context, self.index[data_key_jewels][jewel])
                 return True
 
-        return False
+        return self.customizer.GetCustomJewelValue(item_name, context)
 
     def _update_card_value(self, context):
         type_line = context['typeLine']

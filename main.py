@@ -4,6 +4,7 @@ import time
 import requests
 import data
 import evaluate
+import data_customizer
 import ctypes
 
 from colorama import init
@@ -14,7 +15,10 @@ league = "Incursion"
 initial_change_id = ""
 enabled = 1
 
-dataLookup = data.IndexerData()
+customizer = data_customizer.DataCustomizer()
+
+dataLookup = data.IndexerData(customizer)
+
 itemEvaluation = evaluate.ItemEvaluation(dataLookup)
 itemEvaluation.add_ignore("Grand Spectrum")  # variations are not easy to distinguish in data
 itemEvaluation.add_ignore("Atziri's Splendour")  # too many variations
@@ -63,6 +67,8 @@ def print_result(result):
     print()
     print_result_part(color + "[{}] ".format(time.strftime("%H:%M:%S")))
     print_result_part(" ~{}~ ".format(result['value_source_id']))
+    if 'variant' in result:
+        print_result_part("(Variant: {}) ".format(result['variant']))
     print_result_part(Fore.WHITE + "{}% ({}c) ".format(
         get_formated_value(color, result['percent_decrease']),
         get_formated_value(color, result['gain'])))

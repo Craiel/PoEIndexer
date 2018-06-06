@@ -4,6 +4,7 @@ import hashlib
 import json
 import time
 
+
 class ItemEvaluation:
     league = "Standard"
     cache_directory = "cache_evaluate"
@@ -295,6 +296,12 @@ class ItemEvaluation:
         elif 'afilar' in price_raw:
             currency = "Blacksmith's Whetstone"
             currency_title = "whetstones"
+        elif 'orb-of-annulment' in price_raw:
+            currency = "Orb of Annulment"
+            currency_title = "annul"
+        elif 'trans' in price_raw:
+            currency = "Orb of Transmutation"
+            currency_title = "transmute"
         elif 'burin' in price_raw:
             # Unknown translation
             return False
