@@ -49,7 +49,9 @@ def print_result_part(string):
 
 def print_result(result):
 
-    if result['rating'] == 4:
+    if result['is_graded_item']:
+        color = Fore.CYAN
+    elif result['rating'] == 4:
         color = Fore.MAGENTA
         # won't notify on these, they are almost always mis-pricing
     elif result['rating'] == 3:
@@ -69,13 +71,25 @@ def print_result(result):
     print_result_part(" ~{}~ ".format(result['value_source_id']))
     if 'variant' in result:
         print_result_part("(Variant: {}) ".format(result['variant']))
-    print_result_part(Fore.WHITE + "{}% ({}c) ".format(
-        get_formated_value(color, result['percent_decrease']),
-        get_formated_value(color, result['gain'])))
-    print_result_part("OfferValue={}c, Value={}c ({}c)".format(
-        get_formated_value(color, result['price']),
-        get_formated_value(color, result['value']),
-        get_formated_value(color, result['optimistic_value'])
+
+    if result['is_graded_item']:
+        print_result_part(Fore.WHITE + "Grade: {} ({})".format(
+            get_formated_value(color, result['grade_score']),
+            result['sub_type']))
+        for graded_modifier in result['grade_mods']:
+            print()
+            print_result_part(Fore.WHITE + "  -> M: {} {}".format(
+                get_formated_value(color, graded_modifier['value']),
+                graded_modifier['target']))
+    else:
+        print_result_part(Fore.WHITE + "{}% ({}c) ".format(
+            get_formated_value(color, result['percent_decrease']),
+            get_formated_value(color, result['gain'])))
+
+        print_result_part("OfferValue={}c, Value={}c ({}c)".format(
+            get_formated_value(color, result['price']),
+            get_formated_value(color, result['value']),
+            get_formated_value(color, result['optimistic_value'])
     ))
 
     if result['currency'] is not None:

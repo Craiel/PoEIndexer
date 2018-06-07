@@ -17,6 +17,7 @@ class ItemEvaluation:
     stat_items_invalid_price = 0
     stat_items_low_gain = 0
     stat_items_low_rating = 0
+    stat_items_with_custom_grade = 0
     stat_items_by_type = {}
     ignore_list = []
     character_ignore_list = []
@@ -71,12 +72,13 @@ class ItemEvaluation:
     def reset_stats(self):
         self.stat_stashes_processed = 0
         self.stat_items_processed = 0
-        self.stat_items_not_for_sale = 0;
+        self.stat_items_not_for_sale = 0
         self.stat_items_ignored = 0
         self.stat_items_invalid_price = 0
         self.stat_items_low_gain = 0
         self.stat_items_low_rating = 0
         self.stat_items_without_value = 0
+        self.stat_items_with_custom_grade = 0
         self.stat_items_by_type = {}
 
     def print_stats(self, elapsed):
@@ -87,7 +89,7 @@ class ItemEvaluation:
         ))
 
         print("   -> NS={} I={} V={} P={}".format(self.stat_items_not_for_sale, self.stat_items_ignored, self.stat_items_without_value, self.stat_items_invalid_price))
-        print("   -> G={} R={} ".format(self.stat_items_low_gain, self.stat_items_low_rating))
+        print("   -> G={} R={} CGR={}".format(self.stat_items_low_gain, self.stat_items_low_rating, self.stat_items_with_custom_grade))
 
     def _process_stash(self, stash):
         if stash is None:
@@ -123,6 +125,7 @@ class ItemEvaluation:
             'raw_data': item,
             'id': item.get('id', None),
             'type': item.get('frameType', None),
+            'sub_type': None,  # will be filled out below
             'category': item.get('category', None),
             'character': stash.get('lastCharacterName'),
             'note': item.get('note', None),
@@ -141,6 +144,13 @@ class ItemEvaluation:
         if not context['note'].startswith('~'):
             self.stat_items_not_for_sale += 1
             return None
+
+        category_info = item.get('category')
+        if category_info is not None:
+            sub_type_key = list(category_info.keys())[0]
+            sub_type_values = category_info[sub_type_key]
+            if sub_type_values is not None and len(sub_type_values) > 0:
+                context['sub_type'] = category_info[sub_type_key][0]
 
         if context['name_raw'] is None or context['name_raw'] == '':
             context['name'] = item.get('typeLine')
@@ -161,7 +171,11 @@ class ItemEvaluation:
                 return None
 
         self.data.update_value(context)
-        if 'value' not in context or context['value'] < self.min_value:
+        context['is_graded_item'] = False
+        if 'grade_score' in context:
+            self.stat_items_with_custom_grade += 1
+            context['is_graded_item'] = True
+        elif 'value' not in context or context['value'] < self.min_value:
             #print("No Value for " + context['name'])
             self.stat_items_without_value += 1
             return None
@@ -186,35 +200,36 @@ class ItemEvaluation:
             self.stat_items_invalid_price += 1
             return None
 
-        if context['value'] > self.max_currency_to_spend:
-            # this item is too expensive right now
-            return None
-
-        context['optimistic_value'] = context['value'] * self.optimistic_multiplier
-        context['gain'] = context['optimistic_value'] - context['price']
-        if context['gain'] < self.min_gain:
-            # Need to make at least min gain for this to be worth
-            self.stat_items_low_gain += 1
-            return None
-
-        if 'links' in context and context['links'] == 5:
-            if context['default_value'] < 5:
-                # With jewelers prophecy 5 links are barely worth anything
-                # ignore if the non-linked price is low to begin with
-                self.stat_items_ignored += 1
+        if not context['is_graded_item']:
+            if context['value'] > self.max_currency_to_spend:
+                # this item is too expensive right now
                 return None
 
-        context['percent_decrease'] = (context['gain'] / context['optimistic_value']) * 100
-        if context['percent_decrease'] < self.min_percent_decrease:
-            self.stat_items_low_gain += 1
-            return None
+            context['optimistic_value'] = context['value'] * self.optimistic_multiplier
+            context['gain'] = context['optimistic_value'] - context['price']
+            if context['gain'] < self.min_gain:
+                # Need to make at least min gain for this to be worth
+                self.stat_items_low_gain += 1
+                return None
 
-        self._rate_result(context)
-        if context['rating'] <= 0:
-            self.stat_items_low_rating += 1
-            return None
+            if 'links' in context and context['links'] == 5:
+                if context['default_value'] < 5:
+                    # With jewelers prophecy 5 links are barely worth anything
+                    # ignore if the non-linked price is low to begin with
+                    self.stat_items_ignored += 1
+                    return None
 
-        self._save_debug(context)
+            context['percent_decrease'] = (context['gain'] / context['optimistic_value']) * 100
+            if context['percent_decrease'] < self.min_percent_decrease:
+                self.stat_items_low_gain += 1
+                return None
+
+            self._rate_result(context)
+            if context['rating'] <= 0:
+                self.stat_items_low_rating += 1
+                return None
+
+        #self._save_debug(context)
 
         return context
 
