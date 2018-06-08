@@ -602,12 +602,6 @@ class IndexerData:
                 if target_corrupt != corrupted:
                     continue
 
-                if target_level >= 20 and target_level != level:
-                    continue
-
-                if target_quality >= 20 and target_quality != quality:
-                    continue
-
                 if context['name'] == 'Empower Support' \
                     or context['name'] == 'Enlighten Support' \
                     or context['name'] == 'Enhance Support':
@@ -616,7 +610,15 @@ class IndexerData:
                     if target_level != level:
                         continue
                 else:
+                    if target_level >= 20 and target_level != level:
+                        continue
+
+                    if target_quality >= 20 and target_quality != quality:
+                        continue
+
                     if quality >= 20 and target_quality < 20:
+                        continue
+                    if level >= 20 and target_level < 20:
                         continue
 
             value = candidate.get('internal_value')

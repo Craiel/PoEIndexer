@@ -72,6 +72,9 @@ def print_result(result):
     if 'variant' in result:
         print_result_part("(Variant: {}) ".format(result['variant']))
 
+    if 'gem_level' in result:
+        print_result_part("(Gem: {}/{}".format(result['gem_level'], result['gem_quality']))
+
     if result['is_graded_item']:
         print_result_part(Fore.WHITE + "Grade: {} ({})".format(
             get_formated_value(color, result['grade_score']),
