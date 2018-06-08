@@ -581,6 +581,16 @@ class IndexerData:
 
         corrupted = context['corrupted']
 
+        is_special_support_gem = False
+        if context['name'] == 'Empower Support' \
+                or context['name'] == 'Enlighten Support' \
+                or context['name'] == 'Enhance Support':
+            is_special_support_gem = True
+
+        if not is_special_support_gem and corrupted and quality < 20:
+            # ignore corrupt gems unless the quality is 20% +
+            return
+
         matches = []
         results = 0
         result = 0
@@ -602,9 +612,7 @@ class IndexerData:
                 if target_corrupt != corrupted:
                     continue
 
-                if context['name'] == 'Empower Support' \
-                    or context['name'] == 'Enlighten Support' \
-                    or context['name'] == 'Enhance Support':
+                if is_special_support_gem:
 
                     # special case
                     if target_level != level:
