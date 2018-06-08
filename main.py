@@ -36,7 +36,7 @@ itemEvaluation.add_character_ignore("Cerkhar")
 #itemEvaluation.add_character_ignore("Алилет")
 
 lastStatisticTime = 0
-statisticInterval = 60 * 5
+statisticInterval = 60 * 2
 
 def notify_important():
     ctypes.windll.user32.FlashWindow(ctypes.windll.kernel32.GetConsoleWindow(), True)

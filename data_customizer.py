@@ -47,7 +47,7 @@ modifier_tier_data = {
 
 score_data = {
     'boots': {
-        ModifierType.MovementSpeed: 8,
+        ModifierType.MovementSpeed: 10,
         ModifierType.FlatLife: 5,
         ModifierType.ResistFire: 2,
         ModifierType.ResistCold: 2,
@@ -59,7 +59,7 @@ score_data = {
 }
 
 
-grade_enable_boots = True
+grade_enable_boots = False
 
 
 class DataCustomizer:
@@ -159,7 +159,7 @@ class DataCustomizer:
             # multiply the score for triple res boots
             stat_score = stat_score * 1.2
 
-        if stat_score < 750:
+        if stat_score < 800:
             return False
 
         context['grade_score'] = stat_score

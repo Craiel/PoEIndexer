@@ -92,19 +92,20 @@ class ItemEvaluation:
         print("   -> G={} R={} CGR={}".format(self.stat_items_low_gain, self.stat_items_low_rating, self.stat_items_with_custom_grade))
 
     def _process_stash(self, stash):
-        if stash is None:
+        if stash is None or stash['public'] == False:
             return None
-
-        self.stat_stashes_processed += 1
 
         items = stash['items']
         if items is None or len(items) == 0:
             return None
 
+        self.stat_stashes_processed += 1
+
         # scan items
         results = []
         for item in items:
             item_league = item.get('league')
+
             if item_league != self.league:
                 return None
 
@@ -320,7 +321,11 @@ class ItemEvaluation:
         elif 'burin' in price_raw:
             # Unknown translation
             return False
-        elif ' Shard' in price_raw or ' Fragment' in price_raw:
+        elif ' Shard' in price_raw \
+                or ' Fragment' in price_raw \
+                or ' Piece' in price_raw\
+                or 'splinter' in price_raw\
+                or 'breachstone' in price_raw:
             # ignore shards and fragments
             return False
         else:

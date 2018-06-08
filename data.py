@@ -2,6 +2,7 @@ import time
 import requests
 import os
 import json
+import re
 
 from pathlib import Path
 
@@ -26,7 +27,6 @@ class IndexerData:
     league = "Standard"
     cache_directory = "cache_data"
     index = {}
-    enable_gems = True,
     customizer = None
 
     # some data got mixed up at some point and non-unique items made it into the result of unique lists, so we hard-ignore those for now
@@ -77,17 +77,34 @@ class IndexerData:
         context['links'] = count
 
     @staticmethod
-    def _update_item_map_tier(context):
+    def _get_item_property(context, property_name):
         properties = context['raw_data'].get('properties')
         if properties is None:
-            return
+            return None
 
         for prop in properties:
-            if prop['name'] != "Map Tier":
-                continue
+            if prop['name'] == property_name:
+                return prop['values']
 
-            context['map_tier'] = prop['values'][0]
-            return
+        return None
+
+    def _update_item_map_tier(self, context):
+        map_tier_values = self._get_item_property(context, 'Map Tier')
+        if map_tier_values is not None:
+            context['map_tier'] = map_tier_values[0]
+
+    def _update_gem_properties(self, context):
+        level_values = self._get_item_property(context, 'Level')
+        if level_values is None:
+            context['gem_level'] = 1
+        else:
+            context['gem_level'] = int(level_values[0][0].replace(' (Max)', ''))
+
+        quality_values = self._get_item_property(context, 'Quality')
+        if quality_values is None:
+            context['gem_quality'] = 0
+        else:
+            context['gem_quality'] = int(quality_values[0][0].replace('+', '').replace('%', ''))
 
     def _update_item_variant(self, context, expected_variant):
         if expected_variant == "Atlas2":
@@ -225,18 +242,11 @@ class IndexerData:
             # print("Unhandled Flask: " + item_name)
 
         elif 'gems' in category:
-            if not self.enable_gems:
-                return
-
             if context['typeLine'] == 'Vaal Breach':
                 # Invalid gems
                 return
 
             if self._update_gem_value(context):
-                return
-
-            if 'Vaal ' in context['typeLine']:
-                # ignore vaal gems
                 return
 
             print("Unhandled Gem: " + context['typeLine'])
@@ -389,7 +399,7 @@ class IndexerData:
         type_line = context['typeLine']
         for gem in self.index[data_key_skill_gem]:
             if gem == type_line:
-                self._update_value_generic(context, self.index[data_key_skill_gem][gem])
+                self._update_value_gem(context, self.index[data_key_skill_gem][gem])
                 return True
 
         return False
@@ -563,6 +573,70 @@ class IndexerData:
         context['value'] = result
         context['value_source'] = matches[0]
 
+    def _update_value_gem(self, context, data_entry):
+        self._update_gem_properties(context)
+
+        level = context['gem_level']
+        quality = context['gem_quality']
+
+        corrupted = context['corrupted']
+
+        matches = []
+        results = 0
+        result = 0
+        for candidate in data_entry:
+            entry_variant = candidate.get('variant')
+            if entry_variant is not None:
+
+                match = re.match("([0-9]+)\/?([0-9]*)(c)?", entry_variant)
+                if match is None:
+                    print("Unknown gem entry variant: " + entry_variant)
+                    continue
+
+                target_level = int(match.group(1))
+                target_quality = 0
+                if match.group(2) != '':
+                    target_quality = int(match.group(2))
+                target_corrupt = match.group(3) == 'c'
+
+                if target_corrupt != corrupted:
+                    continue
+
+                if target_level >= 20 and target_level != level:
+                    continue
+
+                if target_quality >= 20 and target_quality != quality:
+                    continue
+
+                if context['name'] == 'Empower Support' \
+                    or context['name'] == 'Enlighten Support' \
+                    or context['name'] == 'Enhance Support':
+
+                    # special case
+                    if target_level != level:
+                        continue
+                else:
+                    if quality >= 20 and target_quality < 20:
+                        continue
+
+            value = candidate.get('internal_value')
+
+            results += 1
+            result = value
+            matches.append(candidate)
+
+        if results == 0:
+            return 0
+
+        if results != 1:
+            # Inconclusive, wont take the risk
+            print("Inconclusive: " + str(results))
+            print(matches)
+            return 0
+
+        context['value'] = result
+        context['value_source'] = matches[0]
+
     def _get_data_cache_name(self, path):
         return time.strftime("%Y-%m-%d-%H") + "_" + self.league + "_" + path
 
@@ -651,9 +725,6 @@ class IndexerData:
         self._index_data(data_key_prophecy, data, "name")
 
     def _reload_skill_gems(self):
-        if not self.enable_gems:
-            return
-
         link = self._get_ninja_link(self._ninja_item_overview_func, "SkillGem")
         data = self._load_data(link, self._get_data_cache_name(data_key_skill_gem))
         self._index_data(data_key_skill_gem, data, "name")
