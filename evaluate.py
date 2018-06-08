@@ -366,30 +366,66 @@ class ItemEvaluation:
 
         return True
 
-    @staticmethod
-    def _rate_result(context):
+    def _rate_result(self, context):
 
         context['rating'] = 0
 
+        is_gem = 'gem_level' in context
+        is_map = context['category'] == 'maps'
+
+        if is_map:
+            return self._rate_result_map(context)
+        elif is_gem:
+            return self._rate_result_gem(context)
+        else:
+            return self._rate_result(context)
+
+    @staticmethod
+    def _rate_result_default(context):
+        context['rating'] = 0
+
+        if context['value'] <= 5:
+            context['rating'] = 1
+            return
+
         # set the main rating based on the percentage gain
         if context['percent_decrease'] >= 90:
-            if context['value'] <= 5 and context['category'] != 'maps':
-                # anything except maps less or equal to 5c worth is always at rating 1
-                context['rating'] = 1
-            else:
-                context['rating'] = 4
+            context['rating'] = 4
         elif context['percent_decrease'] >= 60:
-            if context['value'] <= 5 and context['category'] != 'maps':
-                # anything except maps less or equal to 5c worth is always at rating 1
-                context['rating'] = 1
-            else:
-                context['rating'] = 3
+            context['rating'] = 3
         elif context['percent_decrease'] >= 40:
             context['rating'] = 2
         elif context['percent_decrease'] >= 20:
-
-            # Ignore certain categories in low percentages
-            if context['category'] == 'maps':
-                return
-
             context['rating'] = 1
+
+    @staticmethod
+    def _rate_result_gem(context):
+        context['rating'] = 0
+
+        if context['value'] <= 8:
+            # ignore gems less/equal #
+            return
+
+        # set the main rating based on the percentage gain
+        if context['percent_decrease'] >= 90:
+            context['rating'] = 4
+        elif context['percent_decrease'] >= 75:
+            context['rating'] = 3
+        elif context['percent_decrease'] >= 50:
+            context['rating'] = 2
+
+    @staticmethod
+    def _rate_result_map(context):
+        context['rating'] = 0
+
+        if context['value'] <= 5:
+            # ignore maps less/equal #
+            return
+
+        # set the main rating based on the percentage gain
+        if context['percent_decrease'] >= 90:
+            context['rating'] = 4
+        elif context['percent_decrease'] >= 60:
+            context['rating'] = 3
+        elif context['percent_decrease'] >= 40:
+            context['rating'] = 2
