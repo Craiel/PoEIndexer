@@ -378,7 +378,7 @@ class ItemEvaluation:
         elif is_gem:
             return self._rate_result_gem(context)
         else:
-            return self._rate_result(context)
+            return self._rate_result_default(context)
 
     @staticmethod
     def _rate_result_default(context):
