@@ -33,7 +33,7 @@ itemEvaluation.max_currency_to_spend = 99999
 itemEvaluation.add_character_ignore("Cerkhar")
 
 # Known Spammers / Abusers / Price Fixers
-#itemEvaluation.add_character_ignore("Алилет")
+itemEvaluation.add_character_ignore("VOC_INCURSION_TRADER")
 
 lastStatisticTime = 0
 statisticInterval = 60 * 2

@@ -91,7 +91,7 @@ class IndexerData:
     def _update_item_map_tier(self, context):
         map_tier_values = self._get_item_property(context, 'Map Tier')
         if map_tier_values is not None:
-            context['map_tier'] = map_tier_values[0]
+            context['map_tier'] = int(map_tier_values[0][0])
 
     def _update_gem_properties(self, context):
         level_values = self._get_item_property(context, 'Level')
@@ -327,7 +327,7 @@ class IndexerData:
         for map in self.index[data_key_unique_maps]:
             map_name = item_name.replace("Superior ", "")
             if map == map_name:
-                self._update_value_generic(context, self.index[data_key_unique_maps][map])
+                self._update_value_map(context, self.index[data_key_unique_maps][map])
                 return True
 
         if len(candidates) > 0:
@@ -337,7 +337,7 @@ class IndexerData:
         for map in self.index[data_key_maps]:
             map_name = type_line.replace("Superior ", "")
             if map == map_name:
-                self._update_value_generic(context, self.index[data_key_maps][map])
+                self._update_value_map(context, self.index[data_key_maps][map])
                 return True
 
             if map in item_name:
@@ -562,6 +562,43 @@ class IndexerData:
             matches.append(candidate)
 
         if results == 0:
+            return 0
+
+        if results != 1:
+            # Inconclusive, wont take the risk
+            print("Inconclusive: " + str(results))
+            print(matches)
+            return 0
+
+        context['value'] = result
+        context['value_source'] = matches[0]
+
+    def _update_value_map(self, context, data_entry):
+        if len(data_entry):
+            return 0
+
+        matches = []
+        results = 0
+        result = 0
+
+        self._update_item_map_tier(context)
+        target_tier = context['map_tier']
+
+        for candidate in data_entry:
+            candidate_tier = candidate.get('mapTier')
+            if target_tier != candidate_tier:
+                print("Tier Mismatch: " + str(target_tier) + " != " + str(candidate_tier))
+                continue
+
+            value = candidate.get('internal_value')
+
+            results += 1
+            result = value
+            matches.append(candidate)
+
+        if results == 0:
+            print("No Match for map: ")
+            print(context)
             return 0
 
         if results != 1:

@@ -378,15 +378,11 @@ class ItemEvaluation:
         elif is_gem:
             return self._rate_result_gem(context)
         else:
+            print(context['category'])
             return self._rate_result_default(context)
 
-    @staticmethod
-    def _rate_result_default(context):
+    def _rate_result_default(self, context):
         context['rating'] = 0
-
-        if context['value'] <= 5:
-            context['rating'] = 1
-            return
 
         # set the main rating based on the percentage gain
         if context['percent_decrease'] >= 90:
@@ -398,28 +394,26 @@ class ItemEvaluation:
         elif context['percent_decrease'] >= 20:
             context['rating'] = 1
 
-    @staticmethod
-    def _rate_result_gem(context):
+    def _rate_result_gem(self, context):
         context['rating'] = 0
 
-        if context['value'] <= 8:
-            # ignore gems less/equal #
+        if context['gain'] <= self.min_gain + 5:
+            # ignore gems with low gain
             return
 
         # set the main rating based on the percentage gain
         if context['percent_decrease'] >= 90:
             context['rating'] = 4
-        elif context['percent_decrease'] >= 75:
+        elif context['percent_decrease'] >= 80:
             context['rating'] = 3
-        elif context['percent_decrease'] >= 50:
+        elif context['percent_decrease'] >= 60:
             context['rating'] = 2
 
-    @staticmethod
-    def _rate_result_map(context):
+    def _rate_result_map(self, context):
         context['rating'] = 0
 
-        if context['value'] <= 5:
-            # ignore maps less/equal #
+        if context['gain'] <= self.min_gain + 2:
+            # ignore maps with low gain
             return
 
         # set the main rating based on the percentage gain
