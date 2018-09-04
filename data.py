@@ -106,11 +106,7 @@ class IndexerData:
         else:
             context['gem_quality'] = int(quality_values[0][0].replace('+', '').replace('%', ''))
 
-    def _update_item_variant(self, context, expected_variant):
-        if expected_variant == "Atlas2":
-            context['variant'] = expected_variant
-            return
-
+    def _update_item_variant(self, context):
         explicit = context['raw_data'].get('explicitMods')
         if explicit is None or len(explicit) == 0:
             context['variant'] = None
@@ -176,12 +172,24 @@ class IndexerData:
                 context['variant'] = 'Bleeding'
                 return
 
+        if context['name'] == "Combat Focus":
+            if 'Strength and Intelligence in Radius' in explicit[1]:
+                context['variant'] = 'StrInt'
+                return
+
+            if 'Dexterity and Strength in Radius' in explicit[1]:
+                context['variant'] = 'DexStr'
+                return
+
+            if 'Intelligence and Dexterity in Radius' in explicit[1]:
+                context['variant'] = 'IntDex'
+                return
+
         if context['name'] == "The Beachhead":
             self._update_item_map_tier(context)
             context['variant'] = "T" + str(context['map_tier'])
             return
 
-        print("Could not determine item variant: " + str(explicit))
         context['variant'] = None
 
     def get_currency_conversion(self, currency_name):
@@ -267,7 +275,9 @@ class IndexerData:
                     'Ancient Shard' in item_name or \
                     'Chaos Shard' in item_name or \
                     'Piece of' in item_name or \
-                    'Vial of' in item_name:
+                    'Vial of' in item_name or \
+                    'Fossil' in item_name or \
+                    'Resonator' in item_name:
                 return
 
             if 'Stacked Deck' in item_name:
@@ -428,14 +438,65 @@ class IndexerData:
 
         return False
 
-    def _update_value_for_frame_and_link_match(self, context, data_entry):
-        self._update_link_count(context)
+    def _entry_matches_candidate(self, context, candidate, check_links=False):
+        item_variant = context['variant']
         item_class = context['type']
-        item_links = context['links']
+        item_base_type = context['typeLine']
+        if check_links:
+            item_links = context['links']
+
+        entry_class = candidate.get('itemClass')
+        entry_links = candidate.get('links')
+        entry_variant = candidate.get('variant')
+        entry_base_type = candidate.get('baseType')
+
+        if item_variant is not None and entry_variant is None:
+            # The entry has a variant but data is not set, so we fake a context and perform the same update_variant call
+            fake_context = {'raw_data': {'explicitMods': []},
+                            'name': context['name']}
+
+            for mod in candidate['explicitModifiers']:
+                fake_context['raw_data']['explicitMods'].append(mod['text'])
+
+            self._update_item_variant(fake_context)
+            entry_variant = fake_context['variant']
+
+        if entry_variant is not None:
+            if entry_variant != item_variant and entry_variant != "Atlas2":
+                if item_variant is None:
+                    print("Variant Mismatch: " + entry_variant)
+                    print(context['raw_data'])
+                return False
+
+        if check_links:
+            if item_links >= 5:
+                if entry_links != item_links:
+                    # print("Item Link Requirement mimatch: " + str(item_links))
+                    return False
+            else:
+                if entry_links >= 5:
+                    # print("Candidate Link Requirement mismatch " + str(entry_links))
+                    return False
+
+        if entry_class != item_class:
+            # print("Class Requirement Mismatch: " + str(entry_class) + " != " + str(item_class) + " || " + str(entry_links) + " != " + str(item_links))
+            return False
+
+        if entry_base_type is not None and item_base_type is not None:
+            if entry_base_type not in item_base_type:
+                #print("Base Type Requirement Mismatch: " + entry_base_type + " != " + item_base_type)
+                return False
+
+        return True
+
+    def _update_value_for_frame_and_link_match(self, context, data_entry):
         corrupted = context['corrupted']
         if corrupted is True:
             # For now we will ignore corrupted weapons and armor, too much variation in price
             return
+
+        self._update_link_count(context)
+        self._update_item_variant(context)
 
         results = 0
         result = 0
@@ -451,31 +512,7 @@ class IndexerData:
 
         matches = []
         for candidate in data_entry:
-            entry_class = candidate.get('itemClass')
-            entry_links = candidate.get('links')
-            entry_variant = candidate.get('variant')
-
-            if entry_variant is not None:
-                self._update_item_variant(context, entry_variant)
-                item_variant = context['variant']
-
-                if entry_variant != item_variant:
-                    if item_variant is None:
-                        print("Variant Mismatch: " + entry_variant)
-                        print(context['raw_data'])
-                    continue
-
-            if item_links >= 5:
-                if entry_links != item_links:
-                    #print("Item Link Requirement mimatch: " + str(item_links))
-                    continue
-            else:
-                if entry_links >= 5:
-                    #print("Candidate Link Requirement mismatch " + str(entry_links))
-                    continue
-
-            if entry_class != item_class:
-                #print("Class Requirement Mismatch: " + str(entry_class) + " != " + str(item_class) + " || " + str(entry_links) + " != " + str(item_links))
+            if not self._entry_matches_candidate(context, candidate, True):
                 continue
 
             value = candidate.get('internal_value')
@@ -492,7 +529,7 @@ class IndexerData:
 
         if results != 1:
             # Inconclusive, wont take the risk
-            print("Inconclusive: " + str(results))
+            print("Inconclusive (1): " + str(results))
             print(matches)
             return 0
 
@@ -505,20 +542,14 @@ class IndexerData:
             # For now we will ignore corrupted weapons and armor, too much variation in price
             return
 
+        self._update_item_variant(context)
+
         matches = []
         results = 0
         result = 0
         for candidate in data_entry:
-            entry_variant = candidate.get('variant')
-            if entry_variant is not None:
-                self._update_item_variant(context, entry_variant)
-                item_variant = context['variant']
-
-                if entry_variant != item_variant:
-                    if item_variant is None:
-                        print("Variant Mismatch: " + entry_variant)
-                        print(context['raw_data'])
-                    continue
+            if not self._entry_matches_candidate(context, candidate):
+                continue
 
             value = candidate.get('internal_value')
 
@@ -532,7 +563,7 @@ class IndexerData:
 
         if results != 1:
             # Inconclusive, wont take the risk
-            print("Inconclusive: " + str(results))
+            print("Inconclusive (2): " + str(results))
             print(matches)
             return 0
 
@@ -540,20 +571,14 @@ class IndexerData:
         context['value_source'] = matches[0]
 
     def _update_value_generic(self, context, data_entry):
+        self._update_item_variant(context)
+
         matches = []
         results = 0
         result = 0
         for candidate in data_entry:
-            entry_variant = candidate.get('variant')
-            if entry_variant is not None:
-                self._update_item_variant(context, entry_variant)
-                item_variant = context['variant']
-
-                if entry_variant != item_variant:
-                    if item_variant is None:
-                        print("Variant Mismatch: " + entry_variant)
-                        print(context['raw_data'])
-                    continue
+            if not self._entry_matches_candidate(context, candidate):
+                continue
 
             value = candidate.get('internal_value')
 
@@ -566,7 +591,7 @@ class IndexerData:
 
         if results != 1:
             # Inconclusive, wont take the risk
-            print("Inconclusive: " + str(results))
+            print("Inconclusive (3): " + str(results))
             print(matches)
             return 0
 
@@ -603,7 +628,7 @@ class IndexerData:
 
         if results != 1:
             # Inconclusive, wont take the risk
-            print("Inconclusive: " + str(results))
+            print("Inconclusive (4): " + str(results))
             print(matches)
             return 0
 
@@ -677,7 +702,7 @@ class IndexerData:
 
         if results != 1:
             # Inconclusive, wont take the risk
-            print("Inconclusive: " + str(results))
+            print("Inconclusive (5): " + str(results))
             print(matches)
             return 0
 

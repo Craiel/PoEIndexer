@@ -30,7 +30,7 @@ itemEvaluation.add_ignore("Ventor's Gamble")  # variable rarity rolls influence 
 itemEvaluation.max_currency_to_spend = 99999
 
 # Own characters
-itemEvaluation.add_character_ignore("Cerkhar")
+itemEvaluation.add_character_ignore("Cerkha")
 
 # Known Spammers / Abusers / Price Fixers
 itemEvaluation.add_character_ignore("VOC_INCURSION_TRADER")
