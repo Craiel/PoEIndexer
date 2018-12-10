@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+    <title>PoE Indexer</title>
+
+    <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
+    <meta content="initial-scale=1.0, user-scalable=no" name="viewport"/>
+
+    <!-- Bootstrap -->
+    <link href="ext/bootstrap.min.css" rel="stylesheet">
+    <link href="ext/bootstrap-select.min.css" rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" rel="stylesheet">
+
+    <link href="style.css" rel="stylesheet" type="text/css"/>
+
+    <!-- Bootstrap -->
+    <script defer src="ext/popper.min.js"></script>
+    <script defer src="ext/tooltip.min.js"></script>
+
+    <script defer src="ext/bootstrap.min.js"></script>
+
+    <script defer src="ext/bootstrap-select.min.js"></script>
+
+    <!-- JQuery -->
+    <script src="ext/jquery-3.3.1.min.js"></script>
+
+    <!-- Notify -->
+    <script defer src="ext/notify.min.js"></script>
+
+    <!-- feather -->
+    <script defer src="ext/feather.min.js"></script>
+
+    <!-- Fuse -->
+    <script defer src="ext/fuse.min.js"></script>
+
+    <!-- Moment -->
+    <script defer src="ext/moment.min.js"></script>
+    <script defer src="ext/moment-timezone.min.js"></script>
+
+    <!-- Core - Order Matters -->
+    <script src="src/core_data.js"></script>
+    <script src="src/main.js"></script>
+    <script src="src/utils.js"></script>
+    <script src="src/changelog.js"></script>
+    <script src="src/events.js"></script>
+    <script src="src/settings.js"></script>
+    <script src="src/data.js"></script>
+    <script src="src/stash.js"></script>
+    <script src="src/evaluate.js"></script>
+
+    <script defer src="src/update_data.js"></script>
+
+</head>
+
+<body onload="POEI.initialize()">
+
+<div id="main-page">
+    <nav class="navbar navbar-dark fixed-top bg-dark flex-md-nowrap p-0 shadow">
+        <input aria-label="Search" class="form-control form-control-dark w-100" id="searchField" placeholder="Search"
+               type="text">
+        <a class="navbar-brand col-sm-0 col-md-0 mr-0 text-center" href="#"
+           style="width: 50px" target="_blank"><img src="images/icons/mark-github.svg"></a>
+        <a class="navbar-brand col-sm-0 col-md-0 mr-0 text-center" href="#"
+           style="width: 50px" target="_blank"><img src="images/icons/reddit.svg"></a>
+    </nav>
+
+    <div class="modal fade" id="copyTextModal" role="dialog" tabindex="-1">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header text-center">
+                    <h4 class="modal-title w-100 font-weight-bold" id="copyTextModalTitle">NOT_SET</h4>
+                    <button aria-label="Close" class="close" data-dismiss="modal" type="button">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body mx-3">
+                    <div class="md-form mb-2">
+                        <input class="form-control" id="copyTextModal-text" type="text">
+                        <button class="btn btn-default" id="copyTextModal-copy">Copy</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="changelogModal" role="dialog" tabindex="-1">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header text-center">
+                    <h4 class="modal-title w-100 font-weight-bold">What's New?</h4>
+                    <button aria-label="Close" class="close" data-dismiss="modal" type="button">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body mx-3 changeLogContent" id="changeLogContent">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container-fluid">
+        <div class="row">
+            <nav class="col-md-2 d-none d-md-block bg-light sidebar">
+                <div class="sidebar-sticky">
+                    <div class="w-100">
+                        <div class="card bg-dark text-white">
+                            <h3 class="card-title text-center">
+                                <div class="timeDisplayTitle">Time</div>
+                                <div class="d-flex flex-wrap justify-content-center">
+                                    <a><span class="badge" id="time-local-hours">99</span></a> :
+                                    <a><span class="badge" id="time-local-min">99</span></a> :
+                                    <a><span class="badge" id="time-local-sec">99</span></a>
+                                </div>
+                            </h3>
+                        </div>
+                    </div>
+
+                    <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
+                        <span>Content</span>
+                    </h6>
+                    <ul class="nav flex-column mb-2">
+                        <li class="nav-item">
+                            <a class="nav-link active" href="#" id="content_main_toggle">
+                                <span data-feather="file-text"></span>
+                                Main
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link active" href="#" id="content_settings_toggle">
+                                <span data-feather="file-text"></span>
+                                Settings
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link active" href="#" id="content_changelog_toggle">
+                                <span data-feather="file-text"></span>
+                                Changelog
+                            </a>
+                        </li>
+                    </ul>
+                    <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
+                        <span>Statistics</span>
+                    </h6>
+                    <ul class="nav flex-column mb-2 text-center" id="navStats">
+                        <li class="nav-item"><div id="statStashes">9999 FOO</div></li>
+                        <li class="nav-item"><div id="statItems">9999 FOO</div></li>
+                        <li class="nav-item"><div id="statMissingData">9999 FOO</div></li>
+                    </ul>
+                </div>
+            </nav>
+
+            <main class="col-md-9 ml-sm-auto col-lg-10 px-4" role="main">
+
+                <div id="content_main" class="py-5 bg-light">
+                    <h2 class="text-center">Main</h2>
+                    <br>
+                    <div class="accordion" id="mainContent"></div>
+                </div>
+
+                <div id="content_settings" class="py-5 bg-light">
+                    <h2 class="text-center">Frequently asked Questions</h2>
+                    <br>
+                    <div class="accordion" id="settingsContent">
+                        <button class="btn btn-primary" id="settingsDataReload" type="button">Reload</button>
+                        <button class="btn btn-primary" id="settingsPause" type="button">Pause</button>
+                    </div>
+                </div>
+
+                <div id="content_changelog" class="py-5 bg-light">
+                </div>
+
+            </main>
+        </div>
+    </div>
+</div>
+
+<noscript style="color:white; background-color:black">
+    If you can see this message, there is likely a problem loading the Overviewer JavaScript components.
+    Check the JavaScript console for error messages.
+</noscript>
+
+
+</body>
+</html>
