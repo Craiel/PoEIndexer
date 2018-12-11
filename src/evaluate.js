@@ -5,7 +5,7 @@
         constructor() {
             this.statMissingData = 0;
 
-            this.testCount = 0;
+            this.statEval = 0;
         }
 
         initialize() {
@@ -23,10 +23,8 @@
                 return;
             }
 
-            this.testCount++;
-            if(this.testCount > 50000){
-                throw asdasd;
-            }
+            this.statEval++;
+            $('#statEval').text(this.statEval + ' Eval');
 
             // 0 - Normal (Maps & Currency
             // 1 - Magic
@@ -59,6 +57,7 @@
                         return;
                     }
 
+                    entry.rawData = data;
                     this.evaluateEntry(entry, data);
                     return;
                 }
@@ -71,8 +70,39 @@
             }
         }
 
-        evaluateEntry(entry) {
+        evaluateEntry(entry, data) {
+            entry.eval = {
+                // TODO
+            };
 
+            let variant = data;
+            if(data.variants !== undefined) {
+                variant = this.determineMatchingVariant(entry, data);
+                if(variant === undefined){
+                    return;
+                }
+            }
+
+            if(data.value <= entry.cost
+                || data.value < Constants.EvalMinValue) {
+                // No gain
+                return;
+            }
+
+            // TODO further evaluate
+            entry.eval.grosGain = data.value - entry.cost;
+
+            if(entry.eval.grosGain < Constants.EvalMinGrosGain) {
+                // not enough gain
+                return;
+            }
+
+            POEI.results.add(entry, data);
+        }
+
+        determineMatchingVariant(entry, data) {
+            console.warn("Unhandled Variant for " + entry.name);
+            return undefined;
         }
     }
 

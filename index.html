@@ -15,6 +15,7 @@
     <link href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" rel="stylesheet">
 
     <link href="style.css" rel="stylesheet" type="text/css"/>
+    <link href="result.css" rel="stylesheet" type="text/css"/>
 
     <!-- Bootstrap -->
     <script defer src="ext/popper.min.js"></script>
@@ -50,6 +51,7 @@
     <script src="src/data.js"></script>
     <script src="src/stash.js"></script>
     <script src="src/evaluate.js"></script>
+    <script src="src/results.js"></script>
 
     <script defer src="src/update_data.js"></script>
 
@@ -148,6 +150,8 @@
                         <li class="nav-item"><div id="statStashes">9999 FOO</div></li>
                         <li class="nav-item"><div id="statItems">9999 FOO</div></li>
                         <li class="nav-item"><div id="statMissingData">9999 FOO</div></li>
+                        <li class="nav-item"><div id="statEval">9999 FOO</div></li>
+                        <li class="nav-item"><div id="statResults">9999 FOO</div></li>
                     </ul>
                 </div>
             </nav>
@@ -157,7 +161,11 @@
                 <div id="content_main" class="py-5 bg-light">
                     <h2 class="text-center">Main</h2>
                     <br>
-                    <div class="accordion" id="mainContent"></div>
+                    <div class="table-container">
+                        <table class="table table-filter">
+                            <tbody id="result-table"></tbody>
+                        </table>
+                    </div>
                 </div>
 
                 <div id="content_settings" class="py-5 bg-light">

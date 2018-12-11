@@ -11,7 +11,7 @@
             this.delay = 0;
             this.isPaused = true;
 
-            this.priceRegex = new RegExp('.*?~(b\\/o|price)\\s*([0-9\.]*)\\s*(.*)', 'i');
+            this.priceRegex = new RegExp('.*?~(b\\/o|price)\\s*([0-9\.]*)\\s*(\\w+)', 'i');
         }
 
         initialize() {
@@ -302,7 +302,8 @@
                 }
 
                 case 'alch':
-                case 'alc': {
+                case 'alc':
+                case 'alchemy': {
                     currencyId = 'Orb of Alchemy';
                     break;
                 }
@@ -329,7 +330,13 @@
                     break;
                 }
 
-                case 'exa': {
+                case 'regal': {
+                    currencyId = 'Regal Orb';
+                    break;
+                }
+
+                case 'exa':
+                case 'exalt': {
                     currencyId = 'Exalted Orb';
                     break;
                 }
@@ -346,8 +353,11 @@
                 return false;
             }
 
-            // Replace the currency with the proper id and save the original notation for the whisper url
+            // Save the original cost info
+            entry.costAd = entry.cost;
             entry.costCurrencyAd = entry.costCurrency;
+
+            // Replace the currency with the proper id and save the original notation for the whisper url
             entry.costCurrency = currencyId;
 
             if(convertToChaos === true) {
@@ -356,7 +366,6 @@
                     return false;
                 }
 
-                entry.costAd = entry.cost;
                 entry.cost = entry.cost * currencyData.value;
                 entry.costCurrencyId = entry.costCurrency;
                 entry.costCurrency = 'Chaos Orb';

@@ -268,6 +268,7 @@ class IndexerData:
                     'Scroll of Wisdom' in item_name or \
                     'Harbinger\'s Shard' in item_name or \
                     'Alchemy Shard' in item_name or \
+                    'Alteration Shard' in item_name or \
                     'Scroll Fragment' in item_name or \
                     'Horizon Shard' in item_name or \
                     'Engineer\'s Shard' in item_name or \

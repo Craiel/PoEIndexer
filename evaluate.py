@@ -378,7 +378,6 @@ class ItemEvaluation:
         elif is_gem:
             return self._rate_result_gem(context)
         else:
-            print(context['category'])
             return self._rate_result_default(context)
 
     def _rate_result_default(self, context):
