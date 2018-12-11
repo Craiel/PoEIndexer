@@ -261,30 +261,81 @@
 
         normalizeEntryCost(entry) {
             if(entry.cost === 0
+                || entry.cost === ''
                 || entry.cost === undefined
-                || entry.costCurrency === undefined) {
+                || entry.costCurrency === undefined
+                || entry.costCurrency === '') {
                 return false;
             }
 
+            let convertToChaos = true;
             let currencyId = entry.costCurrency;
-            switch (entry.costCurrency) {
+            switch (entry.costCurrency.toLowerCase().trim()) {
                 case 'alt': {
-                    currencyId = 'Alteration Orb';
+                    currencyId = 'Orb of Alteration';
                     break;
                 }
 
-                case 'alch': {
-                    currencyId = 'Alchemy Orb';
+                case 'jew': {
+                    currencyId = 'Jeweller\'s Orb';
                     break;
                 }
 
+                case 'fuse': {
+                    currencyId = 'Orb of Fusing';
+                    break;
+                }
+
+                case 'chisel': {
+                    currencyId = 'Cartographer\'s Chisel';
+                    break;
+                }
+
+                case 'chrom': {
+                    currencyId = 'Chromatic Orb';
+                    break;
+                }
+
+                case 'silver': {
+                    currencyId = 'Silver Coin';
+                    break;
+                }
+
+                case 'alch':
+                case 'alc': {
+                    currencyId = 'Orb of Alchemy';
+                    break;
+                }
+
+                case 'c':
                 case 'chaos': {
                     currencyId = 'Chaos Orb';
+                    convertToChaos = false;
+                    break;
+                }
+
+                case 'vaal': {
+                    currencyId = 'Vaal Orb';
+                    break;
+                }
+
+                case 'scour': {
+                    currencyId = 'Orb of Scouring';
+                    break;
+                }
+
+                case 'regret': {
+                    currencyId = 'Orb of Regret';
                     break;
                 }
 
                 case 'exa': {
                     currencyId = 'Exalted Orb';
+                    break;
+                }
+
+                case 'gcp': {
+                    currencyId = 'Gemcutter\'s Prism';
                     break;
                 }
             }
@@ -293,6 +344,22 @@
             if(currencyData === undefined) {
                 console.error("Unknown Currency: " + currencyId);
                 return false;
+            }
+
+            // Replace the currency with the proper id and save the original notation for the whisper url
+            entry.costCurrencyAd = entry.costCurrency;
+            entry.costCurrency = currencyId;
+
+            if(convertToChaos === true) {
+                if(currencyData.value === undefined){
+                    console.error("Currency has no Value: " + currencyId);
+                    return false;
+                }
+
+                entry.costAd = entry.cost;
+                entry.cost = entry.cost * currencyData.value;
+                entry.costCurrencyId = entry.costCurrency;
+                entry.costCurrency = 'Chaos Orb';
             }
 
             return true;

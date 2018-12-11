@@ -24,7 +24,7 @@
             }
 
             this.testCount++;
-            if(this.testCount > 5000){
+            if(this.testCount > 50000){
                 throw asdasd;
             }
 
@@ -69,6 +69,10 @@
                     break;
                 }
             }
+        }
+
+        evaluateEntry(entry) {
+
         }
     }
 

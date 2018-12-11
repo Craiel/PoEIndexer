@@ -11,7 +11,7 @@ from colorama import init
 from colorama import Fore
 init()
 
-league = "Delve"
+league = "Betrayal"
 initial_change_id = ""
 enabled = 1
 
