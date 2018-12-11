@@ -23,6 +23,13 @@
                 return;
             }
 
+            switch (entry.type) {
+                // For now ignore certain things
+                case ItemTypeEnum.Currency: {
+                    return;
+                }
+            }
+
             this.statEval++;
             $('#statEval').text(this.statEval + ' Eval');
 
@@ -83,7 +90,8 @@
                 }
             }
 
-            if(data.value <= entry.cost
+            if(data.value === undefined
+                || data.value <= entry.cost
                 || data.value < Constants.EvalMinValue) {
                 // No gain
                 return;

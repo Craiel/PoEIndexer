@@ -5,6 +5,7 @@
         constructor() {
             this.entries = [];
             this.entryMap = {};
+            this.entryIdMap = {};
             this.nextId = 0;
             this.targetElement = undefined;
             this.statResults = 0;
@@ -18,6 +19,11 @@
         }
 
         add(entry, data) {
+            if(this.entryIdMap[entry.raw.id] !== undefined) {
+                // TODO: Refresh!
+                return;
+            }
+
             entry.resultId = this.nextId++;
             let row = $('<tr data-status="' + entry.type + '" id="result-' + entry.resultId + '"></tr>');
 
@@ -47,11 +53,13 @@
 
             this.entries.push(entry);
             this.entryMap[entry.resultId] = entry;
+            this.entryIdMap[entry.raw.id] = entry;
 
             while(this.entries.length > 50) {
                 let oldEntry = this.entries.shift();
                 $('#result-' + oldEntry.resultId).remove();
                 delete this.entryMap[oldEntry.resultId];
+                delete this.entryIdMap[oldEntry.raw.id];
             }
 
             this.targetElement.prepend(row);
