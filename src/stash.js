@@ -325,6 +325,7 @@
                 case 'alc':
                 case 'alchemy':
                 case 'alchemie':
+                case 'alchemist':
                 case 'alq': {
                     currencyId = 'Orb of Alchemy';
                     break;
