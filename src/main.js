@@ -32,6 +32,14 @@ let POEI = (function(){
             $('#copyTextModal').modal();
         }
 
+        copyText(text) {
+            let $temp = $("<input>");
+            $("body").append($temp);
+            $temp.val(text).select();
+            document.execCommand("copy");
+            $temp.remove();
+        }
+
         initializeUI() {
             for(let content in ContentTypeEnum) {
                 $('#' + ContentTypeEnum[content]).hide();

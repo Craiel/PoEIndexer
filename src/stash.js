@@ -11,7 +11,7 @@
             this.delay = 0;
             this.isPaused = true;
 
-            this.priceRegex = new RegExp('.*?~(b\\/o|price)\\s*([0-9\.]*)\\s*(\\w+)', 'i');
+            this.priceRegex = new RegExp('.*?~(b\\/o|price)\\s*([0-9\.\/]*)\\s*([\\w-]+)', 'i');
         }
 
         initialize() {
@@ -172,6 +172,10 @@
                     continue;
                 }
 
+                this.normalizeProperties(item);
+                this.normalizeSockets(item);
+                this.normalizeExplicits(item);
+
                 if(this.isValidItem(item)) {
                     this.statItems++;
                     POEI.evaluate.enqueue(item);
@@ -266,10 +270,22 @@
                 return false;
             }
 
+            if (typeof entry.cost === 'string' || entry.cost instanceof String) {
+                if (entry.cost.indexOf('/') !== -1) {
+                    return false;
+                }
+
+                entry.cost = parseFloat(entry.cost);
+                if(entry.cost < 0.01) {
+                    return false;
+                }
+            }
+
             let convertToChaos = true;
             let currencyId = entry.costCurrency;
             switch (entry.costCurrency.toLowerCase().trim()) {
-                case 'alt': {
+                case 'alt':
+                case 'veränderung': {
                     currencyId = 'Orb of Alteration';
                     break;
                 }
@@ -279,17 +295,23 @@
                     break;
                 }
 
-                case 'fuse': {
+                case 'fuse':
+                case 'fusing':
+                case 'verbindung':
+                case 'fusión': {
                     currencyId = 'Orb of Fusing';
                     break;
                 }
 
-                case 'chisel': {
+                case 'chisel':
+                case 'meißel': {
                     currencyId = 'Cartographer\'s Chisel';
                     break;
                 }
 
-                case 'chrom': {
+                case 'chrom':
+                case 'crom':
+                case 'färbung': {
                     currencyId = 'Chromatic Orb';
                     break;
                 }
@@ -301,7 +323,9 @@
 
                 case 'alch':
                 case 'alc':
-                case 'alchemy': {
+                case 'alchemy':
+                case 'alchemie':
+                case 'alq': {
                     currencyId = 'Orb of Alchemy';
                     break;
                 }
@@ -323,6 +347,12 @@
                     break;
                 }
 
+                case 'mirror':
+                case 'mir': {
+                    currencyId = 'Mirror of Kalandra';
+                    break;
+                }
+
                 case 'regret': {
                     currencyId = 'Orb of Regret';
                     break;
@@ -333,8 +363,10 @@
                     break;
                 }
 
+                case 'ex':
                 case 'exa':
-                case 'exalt': {
+                case 'exalt':
+                case 'erhaben': {
                     currencyId = 'Exalted Orb';
                     break;
                 }
@@ -343,11 +375,57 @@
                     currencyId = 'Gemcutter\'s Prism';
                     break;
                 }
+
+                case 'divine': {
+                    currencyId = 'Divine Orb';
+                    break;
+                }
+
+                case 'chance':
+                case 'möglichkeiten': {
+                    currencyId = 'Orb of Chance';
+                    break;
+                }
+
+                case 'blessed': {
+                    currencyId = 'Blessed Orb';
+                    break;
+                }
+
+                case 'coin':
+                case 'coins': {
+                    currencyId = 'Perandus Coin';
+                    break;
+                }
+
+                case 'bauble': {
+                    currencyId = 'Glassblower\'s Bauble';
+                    break;
+                }
+
+                case 'blacksmith':
+                case 'whetstone':
+                case 'afilar': {
+                    currencyId = 'Blacksmith\'s Whetstone';
+                    break;
+                }
+
+                case 'orb-of-horizons':
+                case 'apprentice-sextant':
+                case 'journeyman-sextant':
+                case 'master-sextant':
+                case 'splinter-of-chayula':
+                case 'xophs-breachstone':
+                case 'engineers-orb':
+                case 'orb-of-annulment': {
+                    // Ignore these
+                    return false;
+                }
             }
 
             let currencyData = POEI.data.getData(ItemTypeEnum.Currency, currencyId);
             if(currencyData === undefined) {
-                console.error("Unknown Currency: " + currencyId);
+                console.error("Unknown Currency: " + currencyId + ' || ' + entry.raw.note + ' || ' + entry.stash);
                 return false;
             }
 
@@ -370,6 +448,91 @@
             }
 
             return true;
+        }
+
+        normalizeProperties(entry) {
+            if(entry.raw.properties === undefined) {
+                return;
+            }
+
+            let normalized = {};
+            for(let i in entry.raw.properties) {
+                let propertyData = entry.raw.properties[i];
+                if(propertyData === undefined
+                    || propertyData.name === undefined
+                    || propertyData.values === undefined) {
+                    console.warn("Invalid Property Data: ");
+                    console.log(propertyData);
+                    continue;
+                }
+
+                normalized[propertyData.name] = propertyData.values;
+            }
+
+            entry.properties = normalized;
+        }
+
+        normalizeSockets(entry) {
+            if(entry.raw.sockets === undefined) {
+                return;
+            }
+
+            let abyssSockets = 0;
+            let normalized = {};
+            for(let i in entry.raw.sockets) {
+                let socketData = entry.raw.sockets[i];
+                let group = parseInt(socketData.group);
+                let attr = socketData.attr;
+                let color = socketData.sColour;
+
+                if(group === undefined
+                    || attr === undefined
+                    || color === undefined) {
+                    console.warn("Invalid Socket Data: ");
+                    console.log(socketData);
+                    continue;
+                }
+
+                if(normalized[group] === undefined) {
+                    normalized[group] = [];
+                }
+
+                if(color.toLowerCase() === 'a') {
+                    abyssSockets++;
+                }
+
+                normalized[group].push({
+                    attr: attr,
+                    color: color
+                })
+            }
+
+            let highestLink = 0;
+            for(let grp in normalized) {
+                if(normalized[grp].length > highestLink) {
+                    highestLink = normalized[grp].length;
+                }
+            }
+
+            entry.sockets = normalized;
+            entry.abyssSockets = abyssSockets;
+            entry.highestLink = highestLink;
+        }
+
+        normalizeExplicits(entry) {
+            if(entry.raw.explicitMods === undefined) {
+                return;
+            }
+
+            let mods = [];
+            for(let i in entry.raw.explicitMods) {
+                let mod = entry.raw.explicitMods[i];
+
+                let normalized = mod.replace(/([+]*)([0-9]+)([\s%])/g, '$1{}$3');
+                mods.push(normalized.toLowerCase().trim());
+            }
+
+            entry.explicits = mods;
         }
     }
 

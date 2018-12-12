@@ -163,6 +163,12 @@
                         entry.iType = undefined;
                     }
 
+                    if(dataEntry.variant !== undefined
+                        && dataEntry.variant !== ''
+                        && dataEntry.variant !== null) {
+                        entry.variant = dataEntry.variant;
+                    }
+
                     break;
                 }
             }

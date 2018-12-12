@@ -18,7 +18,7 @@
         update(delta) {
         }
 
-        add(entry, data) {
+        add(entry) {
             if(this.entryIdMap[entry.raw.id] !== undefined) {
                 // TODO: Refresh!
                 return;
@@ -45,7 +45,7 @@
 
             let detailList = $('<table class="table"></table>');
             detailList.append($('<tr><td>Cost</td><td>' + entry.cost +'</td></tr>'));
-            detailList.append($('<tr><td>Value</td><td>' + data.value +'</td></tr>'));
+            detailList.append($('<tr><td>Value</td><td>' + entry.data.value +'</td></tr>'));
             detailList.append($('<tr><td>Gros Gain</td><td>' + entry.eval.grosGain +'</td></tr>'));
             detailList.append($('<tr><td>Net Gain</td><td>' + entry.eval.netGain +'</td></tr>'));
             detailList.append($('<tr><td>Pay in</td><td>' + entry.costAd +' ' + entry.costCurrencyAd + '</td></tr>'));
@@ -75,7 +75,9 @@
                 ' listed for ' + entry.costAd + ' ' + entry.costCurrencyAd + ' in ' + Constants.League +
                 ' (stash tab "' + entry.stash + '"; position: left ' + entry.pos[0] + ', top ' + entry.pos[1] + ')';
 
-            POEI.showCopyTextDialog(link, 'Copy');
+            console.log(link);
+
+            POEI.copyText(link, 'Copy');
         }
     }
 

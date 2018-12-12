@@ -6,6 +6,18 @@
             this.statMissingData = 0;
 
             this.statEval = 0;
+
+            this.variantMap = {
+                'atziriSplendor': {
+                    'Armour': '{}% increased armour',
+                    'Armour/ES': '{}% increased armour and energy shield',
+                    'Armour/Evasion': '{}% increased armour and evasion',
+                    'Armour/Evasion/ES': '{}% increased armour, evasion and energy shield',
+                    'ES': '+{} to maximum energy shield',
+                    'Evasion': '{}% increased evasion rating',
+                    'Evasion/ES': '{}% increased evasion and energy shield',
+                }
+            };
         }
 
         initialize() {
@@ -65,7 +77,7 @@
                     }
 
                     entry.rawData = data;
-                    this.evaluateEntry(entry, data);
+                    this.evaluateEntry(entry);
                     return;
                 }
 
@@ -77,52 +89,93 @@
             }
         }
 
-        evaluateEntry(entry, data) {
+        evaluateEntry(entry) {
             entry.eval = {
                 // TODO
             };
 
-            let variant = this.determineMatchingVariant(entry, data);
-            if(variant === undefined) {
+            entry.data = this.determineMatchingVariant(entry);
+            if(entry.data === undefined) {
                 return;
             }
 
-            if(data.value === undefined
-                || data.value <= entry.cost
-                || data.value < Constants.EvalMinValue) {
+            if(entry.data.value === undefined
+                || entry.data.value <= entry.cost
+                || entry.data.value < Constants.EvalMinValue) {
                 // No gain
                 return;
             }
 
             // TODO further evaluate
-            entry.eval.grosGain = Math.floor(data.value - entry.cost);
-            entry.eval.grosGainPc = Math.round((entry.eval.grosGain / data.value) * 100);
+            entry.eval.grosGain = Math.floor(entry.data.value - entry.cost);
+            entry.eval.grosGainPc = Math.round((entry.eval.grosGain / entry.data.value) * 100);
 
-            if(entry.eval.grosGainPc < Constants.EvalMinGrosGainPc) {
-                // not enough gain %
+            if(entry.eval.grosGainPc < Constants.EvalMinGrosGainPc
+                || entry.eval.grosGain < Constants.EvalMinGrosGain) {
+                // not enough gain
                 return;
             }
 
-            POEI.results.add(entry, data);
+            POEI.results.add(entry);
         }
 
-        determineMatchingVariant(entry, data) {
+        determineMatchingVariant(entry) {
+            let variants = [];
+            variants.push(entry.rawData);
+            if(entry.rawData.variants !== undefined) {
+                for(let i in entry.rawData.variants) {
+                    variants.push(entry.rawData.variants[i]);
+                }
+            }
+
+            variants = this.filterVariantsBySpecial(entry, variants);
+
             switch (entry.type) {
                 case ItemTypeEnum.Weapon:
                 case ItemTypeEnum.Armor:{
-                    // Sockets & Links
 
-                    return data;
+                    if(entry.corrupted === true) {
+                        // Won't deal with corrupted weapons + armor
+                        return undefined;
+                    }
+
+                    // Sockets & Links
+                    for(let i in variants) {
+                        let varData = variants[i];
+
+                        if(varData.links === undefined
+                            || varData.links === 0) {
+
+                            if(entry.highestLink === undefined
+                                || entry.highestLink < 5) {
+
+                                // This data can match, no links or not enough on either side
+                                return varData;
+                            }
+                        } else {
+                            // This data is for specific amount of links
+                            if(entry.highestLink === varData.links) {
+                                return varData;
+                            }
+                        }
+                    }
+
+                    //console.log(entry);
+                    //throw TODO_ARMOR_NO_MATCH
+
+                    return undefined;
                 }
 
                 case ItemTypeEnum.Gem: {
                     // Quality + Level
+                    //console.log(entry);
+                    //throw TODO_GEM_NO_MATCH
 
-                    return data;
+                    return undefined;
                 }
 
                 default: {
-                    if(data.variants !== undefined){
+                    if(variants.length > 1){
                         console.warn("Unhandled Variant for " + entry.name);
                         return undefined;
                     }
@@ -130,6 +183,75 @@
                     break;
                 }
             }
+        }
+
+        filterVariantsBySpecial(entry, variants) {
+            let matchRequired = false;
+            let result = [];
+            for(let i in variants) {
+                let varData = variants[i];
+
+                if(varData.variant === undefined){
+                    result.push(varData);
+                    continue;
+                }
+
+                // Generic variants first
+                switch (varData.variant) {
+                    case '1 Jewel': {
+                        if (entry.abyssSockets === 1) {
+                            result.push(varData);
+                        }
+
+                        continue;
+                    }
+
+                    case '2 Jewels': {
+                        if (entry.abyssSockets === 2) {
+                            result.push(varData);
+                        }
+
+                        continue;
+                    }
+                }
+
+                // Special cases
+                switch (varData.name) {
+                    case 'Atziri\'s Splendour': {
+                        matchRequired = true;
+
+                        console.log('ATZIRI: ' + varData.variant + ' (' + variants.length + ')');
+                        if(this.itemHasExplicit(entry, this.variantMap.atziriSplendor[varData.variant])) {
+                            return varData;
+                        }
+                    }
+                }
+            }
+
+            if(matchRequired && result.length === 0) {
+                console.error("Variant Mismatch: ");
+                console.log(entry.explicits);
+                //console.log(entry);
+                //throw e;
+            }
+
+            return result;
+        }
+
+        itemHasExplicit(entry, explicit) {
+            if(explicit === undefined
+                || entry.explicits === undefined
+                || entry.explicits.length === 0) {
+                return false;
+            }
+
+            for(let i in entry.explicits) {
+                if(entry.explicits[i] === explicit.toLowerCase().trim()) {
+                    return true;
+                }
+            }
+
+            return false;
         }
     }
 
