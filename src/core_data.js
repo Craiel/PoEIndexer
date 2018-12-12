@@ -19,7 +19,7 @@ const Constants = Object.freeze({
         'Shrieking Essence'
     ],
     'EvalMinValue': 2,
-    'EvalMinGrosGain': 2
+    'EvalMinGrosGainPc': 10
 });
 
 const ContentTypeEnum = Object.freeze({

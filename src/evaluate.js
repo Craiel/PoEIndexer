@@ -82,12 +82,9 @@
                 // TODO
             };
 
-            let variant = data;
-            if(data.variants !== undefined) {
-                variant = this.determineMatchingVariant(entry, data);
-                if(variant === undefined){
-                    return;
-                }
+            let variant = this.determineMatchingVariant(entry, data);
+            if(variant === undefined) {
+                return;
             }
 
             if(data.value === undefined
@@ -98,10 +95,11 @@
             }
 
             // TODO further evaluate
-            entry.eval.grosGain = data.value - entry.cost;
+            entry.eval.grosGain = Math.floor(data.value - entry.cost);
+            entry.eval.grosGainPc = Math.round((entry.eval.grosGain / data.value) * 100);
 
-            if(entry.eval.grosGain < Constants.EvalMinGrosGain) {
-                // not enough gain
+            if(entry.eval.grosGainPc < Constants.EvalMinGrosGainPc) {
+                // not enough gain %
                 return;
             }
 
@@ -109,8 +107,29 @@
         }
 
         determineMatchingVariant(entry, data) {
-            console.warn("Unhandled Variant for " + entry.name);
-            return undefined;
+            switch (entry.type) {
+                case ItemTypeEnum.Weapon:
+                case ItemTypeEnum.Armor:{
+                    // Sockets & Links
+
+                    return data;
+                }
+
+                case ItemTypeEnum.Gem: {
+                    // Quality + Level
+
+                    return data;
+                }
+
+                default: {
+                    if(data.variants !== undefined){
+                        console.warn("Unhandled Variant for " + entry.name);
+                        return undefined;
+                    }
+
+                    break;
+                }
+            }
         }
     }
 

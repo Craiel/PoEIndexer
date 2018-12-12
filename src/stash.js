@@ -135,26 +135,24 @@
                     item.costFixed = globalPriceFixed;
                     item.cost = globalPrice;
                     item.costCurrency = globalPriceCurrency;
-                } else {
-                    let itemNote = itemData.note;
-                    if(itemNote === undefined){
-                        // Item has no price
-                        continue;
-                    }
+                }
 
+                let itemNote = itemData.note;
+                if(itemNote !== undefined) {
                     let match = this.priceRegex.exec(itemNote);
-                    if(match === null){
-                        console.log('Item Cost invalid: ' + itemNote);
-                        continue;
-                    }
+                    if (match !== null) {
+                        item.costFixed = match[1] === 'price';
+                        item.cost = match[2].trim();
+                        if (item.cost === '') {
+                            item.cost = 1;
+                        }
 
-                    item.costFixed = match[1] === 'price';
-                    item.cost = match[2].trim();
-                    if(item.cost === '') {
-                        item.cost = 1;
+                        item.costCurrency = match[3];
                     }
+                }
 
-                    item.costCurrency = match[3];
+                if(item.cost === undefined) {
+                    continue;
                 }
 
                 item.type = this.getItemTypeForCategory(itemData.category);
