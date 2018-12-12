@@ -68,6 +68,7 @@ let POEI = (function(){
             POEI.stash.initialize();
             POEI.evaluate.initialize();
             POEI.results.initialize();
+            POEI.stats.initialize();
 
             feather.replace();
         }

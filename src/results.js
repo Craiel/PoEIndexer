@@ -8,7 +8,6 @@
             this.entryIdMap = {};
             this.nextId = 0;
             this.targetElement = undefined;
-            this.statResults = 0;
         }
 
         initialize() {
@@ -63,15 +62,15 @@
             }
 
             this.targetElement.prepend(row);
-            this.statResults++;
-            $('#statResults').text(this.statResults + ' Results');
+
+            POEI.stats.add('Results');
         }
 
         copyResultLink(id) {
             let entry = this.entryMap[id];
             console.log(entry);
 
-            let link = '@' + entry.account + ' Hi, I would like to buy your ' + entry.name +
+            let link = '@' + entry.character + ' Hi, I would like to buy your ' + entry.name +
                 ' listed for ' + entry.costAd + ' ' + entry.costCurrencyAd + ' in ' + Constants.League +
                 ' (stash tab "' + entry.stash + '"; position: left ' + entry.pos[0] + ', top ' + entry.pos[1] + ')';
 

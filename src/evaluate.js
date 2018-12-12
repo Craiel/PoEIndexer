@@ -3,10 +3,6 @@
     class PoEIndexerEvaluate {
 
         constructor() {
-            this.statMissingData = 0;
-
-            this.statEval = 0;
-
             this.variantMap = {
                 atziriSplendor: {
                     'Armour': '{}% increased armour',
@@ -38,6 +34,12 @@
                     'Added Spells': 'adds {} to {} lightning damage to spells during flask effect',
                     'Conversion': '{}% of physical damage converted to lightning during flask effect',
                     'Penetration': 'damage penetrates {}% lightning resistance during flask effect',
+                },
+
+                yrielFostering: {
+                    'Maim': 'grants level {} summon bestial rhoa skill',
+                    'Bleeding': 'grants level {} summon bestial ursa skill',
+                    'Poison': 'grants level {} summon bestial snake skill',
                 }
             };
         }
@@ -63,9 +65,6 @@
                     return;
                 }
             }
-
-            this.statEval++;
-            $('#statEval').text(this.statEval + ' Eval');
 
             // 0 - Normal (Maps & Currency
             // 1 - Magic
@@ -93,8 +92,7 @@
                 case 8: {
                     let data = POEI.data.getData(entry.type, entry.name);
                     if(data === undefined){
-                        this.statMissingData++;
-                        $('#statMissingData').text(this.statMissingData + ' Missing Data');
+                        POEI.stats.add('Missing Data');
                         return;
                     }
 
@@ -112,12 +110,16 @@
         }
 
         evaluateEntry(entry) {
+
+            POEI.stats.add('Eval');
+
             entry.eval = {
                 // TODO
             };
 
             entry.data = this.determineMatchingVariant(entry);
             if(entry.data === undefined) {
+                POEI.stats.add('Eval Invalid');
                 return;
             }
 
@@ -125,6 +127,7 @@
                 || entry.data.value <= entry.cost
                 || entry.data.value < Constants.EvalMinValue) {
                 // No gain
+                POEI.stats.add('Eval Low Gain');
                 return;
             }
 
@@ -135,6 +138,7 @@
             if(entry.eval.grosGainPc < Constants.EvalMinGrosGainPc
                 || entry.eval.grosGain < Constants.EvalMinGrosGain) {
                 // not enough gain
+                POEI.stats.add('Eval Low Gain');
                 return;
             }
 
@@ -346,6 +350,17 @@
                             matchRequired = true;
 
                             if (this.itemHasExplicit(entry, this.variantMap.vesselVinktar[varData.variant])) {
+                                entry.variantNote = varData.variant;
+                                return [varData];
+                            }
+
+                            continue;
+                        }
+
+                        case 'Yriel\'s Fostering': {
+                            matchRequired = true;
+
+                            if (this.itemHasExplicit(entry, this.variantMap.yrielFostering[varData.variant])) {
                                 entry.variantNote = varData.variant;
                                 return [varData];
                             }

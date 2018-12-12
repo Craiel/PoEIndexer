@@ -6,8 +6,6 @@
             this.currentChangeId = undefined;
             this.activeStashRequest = undefined;
 
-            this.statStashes = 0;
-            this.statItems = 0;
             this.delay = 0;
             this.isPaused = true;
 
@@ -70,11 +68,9 @@
                 }
 
                 this.processStash(stash);
-                this.statStashes++;
+                POEI.stats.add('Stashes');
             }
 
-            $('#statStashes').text(this.statStashes + ' Stashes');
-            $('#statItems').text(this.statItems + ' Items');
             this.activeStashRequest = undefined;
         }
 
@@ -118,6 +114,7 @@
 
                 let item = {
                     account: stashData.accountName,
+                    character: stashData.lastCharacterName,
                     pos: [itemData.w, itemData.h],
                     name: itemData.name,
                     icon: itemData.icon,
@@ -157,6 +154,8 @@
 
                 item.type = this.getItemTypeForCategory(itemData.category);
 
+                POEI.stats.add('Item ' + item.type);
+
                 switch (item.type) {
                     case ItemTypeEnum.Currency:
                     case ItemTypeEnum.Gem:
@@ -177,7 +176,7 @@
                 this.normalizeExplicits(item);
 
                 if(this.isValidItem(item)) {
-                    this.statItems++;
+                    POEI.stats.add('Items');
                     POEI.evaluate.enqueue(item);
                 }
             }
