@@ -9,22 +9,28 @@
         initialize() {
         }
 
-        add(key, value) {
+        add(key, value, parent) {
             if(value === undefined) {
                 value = 1;
             }
 
-            if(this.entries[key] === undefined) {
-                this.entries[key] = {
-                    id: 'stat-' + key,
+            let id = 'stat-' + key.replace(/\s/g, '-').toLowerCase();
+            if(this.entries[id] === undefined) {
+                this.entries[id] = {
+                    id: id,
                     val: 0
                 };
 
-                $('#navStats').append($('<li class="nav-item"><div id="' + this.entries[key].id + '">' + key + ': N/A</div></li>'));
+                let parentEl = $('#navStatsSys');
+                if(parent !== undefined) {
+                    parentEl = $('#' + parent);
+                }
+
+                parentEl.append($('<li class="nav-item"><div id="' + id + '">' + key + ': N/A</div></li>'));
             }
 
-            this.entries[key].val += value;
-            $('#' + this.entries[key].id).text(key + ': ' + this.entries[key].val);
+            this.entries[id].val += value;
+            $('#' + id).text(key + ': ' + this.entries[id].val);
         }
     }
 

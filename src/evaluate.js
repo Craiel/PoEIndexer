@@ -40,6 +40,12 @@
                     'Maim': 'grants level {} summon bestial rhoa skill',
                     'Bleeding': 'grants level {} summon bestial ursa skill',
                     'Poison': 'grants level {} summon bestial snake skill',
+                },
+
+                volkuurGuidance: {
+                    'Fire': 'adds {} to {} fire damage to spells and attacks',
+                    'Cold': 'adds {} to {} cold damage to spells and attacks',
+                    'Lightning': 'adds {} to {} lightning damage to spells and attacks',
                 }
             };
         }
@@ -361,6 +367,17 @@
                             matchRequired = true;
 
                             if (this.itemHasExplicit(entry, this.variantMap.yrielFostering[varData.variant])) {
+                                entry.variantNote = varData.variant;
+                                return [varData];
+                            }
+
+                            continue;
+                        }
+
+                        case 'Volkuur\'s Guidance': {
+                            matchRequired = true;
+
+                            if (this.itemHasExplicit(entry, this.variantMap.volkuurGuidance[varData.variant])) {
                                 entry.variantNote = varData.variant;
                                 return [varData];
                             }

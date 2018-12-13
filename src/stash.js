@@ -154,7 +154,7 @@
 
                 item.type = this.getItemTypeForCategory(itemData.category);
 
-                POEI.stats.add('Item ' + item.type);
+                POEI.stats.add('Item ' + GetKeyByValue(ItemTypeEnum, item.type), 1, 'navStatsItems');
 
                 switch (item.type) {
                     case ItemTypeEnum.Currency:
