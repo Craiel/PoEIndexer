@@ -366,6 +366,7 @@
                 case 'ex':
                 case 'exa':
                 case 'exalt':
+                case 'exalted':
                 case 'erhaben': {
                     currencyId = 'Exalted Orb';
                     break;

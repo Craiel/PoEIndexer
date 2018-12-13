@@ -14,7 +14,7 @@
                 value = 1;
             }
 
-            let id = 'stat-' + key.replace(/\s/g, '-').toLowerCase();
+            let id = 'stat-' + key.replace(/[\s\/:]/g, '-').toLowerCase();
             if(this.entries[id] === undefined) {
                 this.entries[id] = {
                     id: id,

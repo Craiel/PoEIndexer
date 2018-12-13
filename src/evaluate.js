@@ -9,7 +9,7 @@
                     'Armour/ES': '{}% increased armour and energy shield',
                     'Armour/Evasion': '{}% increased armour and evasion',
                     'Armour/Evasion/ES': '{}% increased armour, evasion and energy shield',
-                    'ES': '+{} to maximum energy shield',
+                    'ES': '{}% increased energy shield',
                     'Evasion': '{}% increased evasion rating',
                     'Evasion/ES': '{}% increased evasion and energy shield',
                 },
@@ -125,6 +125,18 @@
 
             entry.data = this.determineMatchingVariant(entry);
             if(entry.data === undefined) {
+                switch (entry.type) {
+                    case ItemTypeEnum.Weapon:
+                    case ItemTypeEnum.Armor:
+                    {
+                        console.error('NO DATA FOR');
+                        console.log(entry);
+                        throw e
+
+                        break
+                    }
+                }
+
                 POEI.stats.add('Eval Invalid');
                 return;
             }
@@ -170,6 +182,7 @@
 
                     if(entry.corrupted === true) {
                         // Won't deal with corrupted weapons + armor
+                        POEI.stats.add('EVIgnore - Corrupt');
                         return undefined;
                     }
 
@@ -195,7 +208,7 @@
                     }
 
                     if(results.length === 1) {
-                        return results[1];
+                        return results[0];
                     }
 
                     if(results.length > 1) {
@@ -205,6 +218,7 @@
                         throw TODO_ARMOR_TOO_MANY_MATCHES
                     }
 
+                    POEI.stats.add('EVIgnore - A:NoData');
                     return undefined;
                 }
 
@@ -229,6 +243,8 @@
                             // For random gems we have to have at least 20 in something
                             if(level < 20 && quality < 20) {
                                 // At least one of the values has to be max for us to even consider
+
+                                POEI.stats.add('EVIgnore - G:NoSpecial');
                                 return undefined;
                             }
                         }
@@ -256,12 +272,14 @@
                         throw TODO_GEM_TOO_MANY_MATCHES
                     }
 
+                    POEI.stats.add('EVIgnore - G:NoData');
                     return undefined;
                 }
 
                 case ItemTypeEnum.Jewel:
                 case ItemTypeEnum.Accessory:
-                case ItemTypeEnum.Flask: {
+                case ItemTypeEnum.Flask:
+                case ItemTypeEnum.Card: {
                     if(variants.length === 1) {
                         return variants[0];
                     }
@@ -278,6 +296,7 @@
                         return undefined;
                     }
 
+                    POEI.stats.add('EV_N/I:' + entry.type);
                     break;
                 }
             }
@@ -324,10 +343,10 @@
 
                             if (this.itemHasExplicit(entry, this.variantMap.atziriSplendor[varData.variant])) {
                                 entry.variantNote = varData.variant;
-                                return [varData];
+                                result.push(varData);
                             }
 
-                            continue;
+                            break;
                         }
 
                         case 'Doryani\'s Invitation': {
@@ -335,10 +354,10 @@
 
                             if (this.itemHasExplicit(entry, this.variantMap.doryaniInvitation[varData.variant])) {
                                 entry.variantNote = varData.variant;
-                                return [varData];
+                                result.push(varData);
                             }
 
-                            continue;
+                            break;
                         }
 
                         case 'Impresence': {
@@ -346,10 +365,10 @@
 
                             if (this.itemHasExplicit(entry, this.variantMap.impresence[varData.variant])) {
                                 entry.variantNote = varData.variant;
-                                return [varData];
+                                result.push(varData);
                             }
 
-                            continue;
+                            break;
                         }
 
                         case 'Vessel of Vinktar': {
@@ -357,10 +376,10 @@
 
                             if (this.itemHasExplicit(entry, this.variantMap.vesselVinktar[varData.variant])) {
                                 entry.variantNote = varData.variant;
-                                return [varData];
+                                result.push(varData);
                             }
 
-                            continue;
+                            break;
                         }
 
                         case 'Yriel\'s Fostering': {
@@ -368,10 +387,10 @@
 
                             if (this.itemHasExplicit(entry, this.variantMap.yrielFostering[varData.variant])) {
                                 entry.variantNote = varData.variant;
-                                return [varData];
+                                result.push(varData);
                             }
 
-                            continue;
+                            break;
                         }
 
                         case 'Volkuur\'s Guidance': {
@@ -379,15 +398,17 @@
 
                             if (this.itemHasExplicit(entry, this.variantMap.volkuurGuidance[varData.variant])) {
                                 entry.variantNote = varData.variant;
-                                return [varData];
+                                result.push(varData);
                             }
 
-                            continue;
+                            break;
+                        }
+
+                        default: {
+                            result.push(varData);
+                            break;
                         }
                     }
-
-                    result.push(varData);
-
                 } else {
 
                     // Base type special cases
